@@ -1,0 +1,29 @@
+### CHIAVI E SEGRETI (FONDAMENTALE) ###
+.env
+
+### AMBIENTI VIRTUALI PYTHON ###
+venv/
+env/
+ENV/
+
+### CACHE DI PYTHON ###
+__pycache__/
+*.py[cod]
+*$py.class
+
+### LIBRERIE E AMBIENTI LOCALI ###
+.pytest_cache/
+.coverage
+htmlcov/
+
+### INTELLIJ IDEA E PYCHARM ###
+.idea/
+*.iml
+*.iws
+*.ipr
+
+### VS CODE ###
+.vscode/
+
+### MAC OS ###
+.DS_Store
