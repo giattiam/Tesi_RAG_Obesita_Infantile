@@ -1,84 +1,143 @@
+"""
+document_loader.py
+Carica documenti da una cartella (PDF, TXT, MD), li pulisce e li divide in chunks.
+"""
+
 import os
 import re
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-def pulisci_testo(testo):
-    """Pulisce il testo da spazi e a capo in eccesso."""
-    testo_pulito = re.sub(r'\n+', '\n', testo)
-    testo_pulito = re.sub(r' +', ' ', testo_pulito)
-    return testo_pulito.strip()
+# ── Configurazione ────────────────────────────────────────────────────────────
+CHUNK_SIZE    = 1000
+CHUNK_OVERLAP = 200
+MIN_CHUNK_LEN = 50          # chunk più corti di così vengono scartati
+ENCODING_FALLBACKS = ["utf-8", "latin-1", "cp1252"]
 
-def carica_e_taglia_cartella(cartella_dati):
-    print(f"Sto analizzando la cartella: {cartella_dati}")
-    documenti_totali = []
+ESTENSIONI_SUPPORTATE = {
+    ".pdf": "PDF",
+    ".txt": "TXT",
+    ".md":  "Markdown",
+}
+# ─────────────────────────────────────────────────────────────────────────────
 
-    try:
-        # 1. Scansioniamo i file uno per uno all'interno della cartella
-        for nome_file in os.listdir(cartella_dati):
-            percorso_file = os.path.join(cartella_dati, nome_file)
 
-            # Ignoriamo eventuali sottocartelle
-            if not os.path.isfile(percorso_file):
-                continue
+def pulisci_testo(testo: str) -> str:
+    """Normalizza spazi e ritorni a capo multipli."""
+    testo = re.sub(r"\n{3,}", "\n\n", testo)   # max 2 newline consecutivi
+    testo = re.sub(r" {2,}", " ", testo)         # spazi multipli → uno solo
+    testo = re.sub(r"\t+", " ", testo)           # tab → spazio
+    return testo.strip()
 
-            # 2. Scegliamo lo strumento giusto in base all'estensione del file
-            if nome_file.endswith('.pdf'):
-                print(f"📄 Trovato PDF: {nome_file}")
-                loader = PyPDFLoader(percorso_file)
-                documenti_totali.extend(loader.load())
 
-            elif nome_file.endswith('.txt'):
-                print(f"📝 Trovato TXT: {nome_file}")
-                # utf-8 serve per leggere correttamente le lettere accentate italiane
-                loader = TextLoader(percorso_file, encoding='utf-8')
-                documenti_totali.extend(loader.load())
+def _carica_txt(percorso: str) -> list:
+    """Tenta di caricare un file di testo provando più encoding."""
+    for enc in ENCODING_FALLBACKS:
+        try:
+            loader = TextLoader(percorso, encoding=enc)
+            docs = loader.load()
+            return docs
+        except (UnicodeDecodeError, Exception):
+            continue
+    print(f"     Impossibile decodificare: {os.path.basename(percorso)} — saltato.")
+    return []
 
-            else:
-                # Se ci metti per sbaglio un'immagine o un file non supportato, lo salta
-                print(f"⚠️ File ignorato (formato non supportato): {nome_file}")
 
-        print(f"\nTrovate {len(documenti_totali)} pagine/documenti totali.")
+def carica_e_taglia_cartella(cartella_dati: str) -> list:
+    """
+    Scansiona `cartella_dati`, carica i documenti supportati,
+    li pulisce e li divide in chunks pronti per il vector store.
 
-        # 3. Pulizia e Metadati
-        for doc in documenti_totali:
-            doc.page_content = pulisci_testo(doc.page_content)
-            # Estraiamo il nome del file per le future citazioni del chatbot
-            if 'source' in doc.metadata:
-                doc.metadata['titolo_documento'] = os.path.basename(doc.metadata['source'])
+    Returns:
+        Lista di Document (LangChain) con metadati arricchiti.
+    """
+    cartella_dati = os.path.abspath(cartella_dati)
+    print(f"\n Cartella sorgente: {cartella_dati}")
 
-        # 4. Taglio il testo (Chunking)
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200
-        )
-
-        chunks = text_splitter.split_documents(documenti_totali)
-        print(f"I documenti sono stati ripuliti e divisi in {len(chunks)} chunks totali.")
-        return chunks
-
-    except Exception as e:
-        print(f"ERRORE GRAVE durante il caricamento: {e}")
+    if not os.path.isdir(cartella_dati):
+        print(f" ERRORE: la cartella non esiste → {cartella_dati}")
         return []
 
-# --- TEST DELLO SCRIPT ---
-if __name__ == "__main__":
-    # Trova la cartella 'src' in cui si trova questo script
-    cartella_src = os.path.dirname(os.path.abspath(__file__))
+    documenti_totali = []
+    contatori = {ext: 0 for ext in ESTENSIONI_SUPPORTATE}
+    ignorati  = []
 
-    # Risale di una cartella (..) e poi entra in 'data' e 'raw'
+    for nome_file in sorted(os.listdir(cartella_dati)):
+        percorso_file = os.path.join(cartella_dati, nome_file)
+        if not os.path.isfile(percorso_file):
+            continue
+
+        estensione = os.path.splitext(nome_file)[1].lower()
+
+        if estensione == ".pdf":
+            print(f"   PDF     → {nome_file}")
+            try:
+                loader = PyPDFLoader(percorso_file)
+                documenti_totali.extend(loader.load())
+                contatori[".pdf"] += 1
+            except Exception as e:
+                print(f"     Errore nel caricare {nome_file}: {e}")
+
+        elif estensione in (".txt", ".md"):
+            etichetta = ESTENSIONI_SUPPORTATE[estensione]
+            print(f"   {etichetta:<9}→ {nome_file}")
+            docs = _carica_txt(percorso_file)
+            documenti_totali.extend(docs)
+            if docs:
+                contatori[estensione] += 1
+
+        else:
+            ignorati.append(nome_file)
+
+    if ignorati:
+        print(f"\n    File ignorati ({len(ignorati)}): {', '.join(ignorati)}")
+
+    print(f"\n Pagine/sezioni caricate: {len(documenti_totali)}")
+    print(f"   PDF: {contatori['.pdf']} file | "
+          f"TXT: {contatori['.txt']} file | "
+          f"MD: {contatori['.md']} file")
+
+    if not documenti_totali:
+        print("  Nessun documento caricato. Controlla la cartella.")
+        return []
+
+    # ── Pulizia testo e metadati ─────────────────────────────────────────────
+    for doc in documenti_totali:
+        doc.page_content = pulisci_testo(doc.page_content)
+        source = doc.metadata.get("source", "")
+        doc.metadata["titolo_documento"] = os.path.basename(source)
+
+    # ── Chunking ─────────────────────────────────────────────────────────────
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
+    )
+    chunks = splitter.split_documents(documenti_totali)
+
+    # Scarta chunks troppo corti (intestazioni orfane, pagine vuote, ecc.)
+    chunks_validi = [c for c in chunks if len(c.page_content.strip()) >= MIN_CHUNK_LEN]
+    scartati = len(chunks) - len(chunks_validi)
+
+    print(f"  Chunks creati: {len(chunks_validi)}"
+          + (f" ({scartati} troppo corti scartati)" if scartati else ""))
+
+    return chunks_validi
+
+
+# ── Esecuzione diretta (test) ─────────────────────────────────────────────────
+if __name__ == "__main__":
+    cartella_src = os.path.dirname(os.path.abspath(__file__))
     cartella_raw = os.path.abspath(os.path.join(cartella_src, "..", "data", "raw"))
 
-    print(f"🔍 PERCORSO ASSOLUTO CALCOLATO: {cartella_raw}")
+    print(f" Percorso assoluto: {cartella_raw}")
 
-    if os.path.exists(cartella_raw):
-        miei_chunks = carica_e_taglia_cartella(cartella_raw)
+    chunks = carica_e_taglia_cartella(cartella_raw)
 
-        if len(miei_chunks) > 0:
-            print("\n--- ESEMPIO DEL PRIMO CHUNK ---")
-            print(f"FONTE: {miei_chunks[0].metadata.get('titolo_documento', 'Sconosciuto')}")
-            print("TESTO:")
-            print(miei_chunks[0].page_content)
-            print("-------------------------------\n")
+    if chunks:
+        print("\n--- ESEMPIO: PRIMO CHUNK ---")
+        print(f"FONTE : {chunks[0].metadata.get('titolo_documento', 'Sconosciuto')}")
+        print(f"PAGINA: {chunks[0].metadata.get('page', 'n/d')}")
+        print(f"TESTO :\n{chunks[0].page_content}")
+        print("----------------------------\n")
     else:
-        print(f"❌ ERRORE: La cartella non esiste in questo percorso: {cartella_raw}")
+        print("\n  Nessun chunk prodotto.")
