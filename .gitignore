@@ -27,3 +27,4 @@ htmlcov/
 
 ### MAC OS ###
 .DS_Store
+.env
