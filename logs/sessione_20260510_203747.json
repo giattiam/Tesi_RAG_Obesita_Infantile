@@ -1,0 +1,43 @@
+{
+  "timestamp_avvio": "2026-05-10T20:37:47.278462",
+  "modello_llm": "gemini-2.5-flash",
+  "modello_retriever": "gemini-embedding-001 k=5",
+  "profilo_rilevato": "genitore",
+  "interazioni": [
+    {
+      "timestamp": "2026-05-10T20:38:23.404545",
+      "profilo": "genitore",
+      "query_originale": "cosa potrei dare da mangiare a mio figlio di 3 anni per merenda, no merendine",
+      "query_riscritta": "Raccomandazioni nutrizionali spuntini salutari bambini età prescolare 3 anni. Prevenzione obesità infantile, alimenti non processati.",
+      "chunks_recuperati": [
+        {
+          "fonte": "alimentazione 2-10.pdf",
+          "pagina": 1,
+          "testo_preview": "Gli spuntini forniscono energia per le attività quotidiane dei bambini, aiutandoli a non arrivare \neccessivamente affamati ai pasti principali. Tuttav"
+        },
+        {
+          "fonte": "OKKio.pdf",
+          "pagina": 0,
+          "testo_preview": "spremuta. \n• Frutta, verdura e bevande: È fondamentale proporre 5 volte al giorno frutta e verdura, \nsia durante che fuori dai pasti. In famiglia biso"
+        },
+        {
+          "fonte": "OKKio.pdf",
+          "pagina": 0,
+          "testo_preview": "fisica sufficiente per la sua età. Inoltre, i genitori riferiscono che quasi 1 bambino su 3 (il 31%) \ntrascorre più di 2 ore al giorno davanti alla TV"
+        },
+        {
+          "fonte": "Tutti a tavola.pdf",
+          "pagina": 9,
+          "testo_preview": "E IL RISCHIO DI ALLERGIE? Le vecchie raccomandazioni secondo cui ritardare l’introduzione nell’alimentazione \ncomplementare infantile degli alimenti c"
+        },
+        {
+          "fonte": "Tutti a tavola.pdf",
+          "pagina": 0,
+          "testo_preview": "Tutti a tavola – Servizio Sanitario Regionale Emilia-Romagna – Svezzamento, guida per i \ngenitori \n \nSecondo le più recenti raccomandazioni scientific"
+        }
+      ],
+      "risposta": "Capisco la tua domanda, è molto comune chiedersi quali siano le merende migliori e più sane per i nostri bambini! È un'ottima idea cercare alternative alle merendine confezionate.\n\nGli spuntini sono importanti perché danno energia ai bambini per le loro attività e li aiutano a non arrivare troppo affamati ai pasti principali. L'importante è che non siano troppo abbondanti, per non togliere l'appetito per il pranzo o la cena.\n\nEcco alcune idee pratiche e gustose per la merenda del tuo bambino di 3 anni, basate su abitudini quotidiane sane:\n\n*   **Frutta fresca:** È un'ottima abitudine includere frutta fresca in almeno uno dei due spuntini della giornata. Puoi proporre un frutto intero, a pezzetti o frullato.\n*   **Yogurt bianco:** Semplice e nutriente.\n*   **Frutta secca:** Se il bambino è abituato e non ci sono rischi di soffocamento (magari tritata o in piccole quantità, sempre sotto supervisione).\n*   **Prodotti da forno semplici:** Come grissini o crackers.\n*   **Verdure fresche in pinzimonio:** Un modo divertente per far mangiare le verdure, magari con un po' di olio d'oliva.\n*   **Pane con olio o verdure:** Una merenda semplice e gustosa.\n*   **Spremuta:** Per una merenda leggera a metà mattina.\n\nRicorda che è fondamentale proporre frutta e verdura 5 volte al giorno, sia durante che fuori dai pasti. E per dissetarsi, l'acqua è sempre la scelta migliore!\n\n(Fonte: alimentazione 2-10.pdf, pag. 1; OKKio.pdf, pag. 0)",
+      "latenza_ms": 17162
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "timestamp_avvio": "2026-05-10T20:24:11.861221",
+  "modello_llm": "gemini-2.5-flash",
+  "modello_retriever": "gemini-embedding-001 k=5",
+  "profilo_rilevato": "insegnante",
+  "interazioni": [
+    {
+      "timestamp": "2026-05-10T20:24:52.258021",
+      "profilo": "insegnante",
+      "query_originale": "merenda per i miei alunni senza utilizzare le merendine, 10 anni",
+      "query_riscritta": "Raccomandazioni nutrizionali spuntini salutari bambini età scolare 10 anni, alternative a prodotti ultra-processati, alimenti freschi, basso indice glicemico, prevenzione obesità infantile, contesto scolastico.",
+      "chunks_recuperati": [
+        {
+          "fonte": "alimentazione 2-10.pdf",
+          "pagina": 1,
+          "testo_preview": "Gli spuntini forniscono energia per le attività quotidiane dei bambini, aiutandoli a non arrivare \neccessivamente affamati ai pasti principali. Tuttav"
+        },
+        {
+          "fonte": "alimentazione 2-10.pdf",
+          "pagina": 3,
+          "testo_preview": "zuccherato. \n3. Pinzimonio colorato: Bastoncini di carota, finocchio e sedano da intingere in un po' \nd'olio e sale. \n4. Pane e ricotta: Una fetta di "
+        },
+        {
+          "fonte": "OKKio.pdf",
+          "pagina": 0,
+          "testo_preview": "spremuta. \n• Frutta, verdura e bevande: È fondamentale proporre 5 volte al giorno frutta e verdura, \nsia durante che fuori dai pasti. In famiglia biso"
+        },
+        {
+          "fonte": "alimentazione 2-10.pdf",
+          "pagina": 0,
+          "testo_preview": "L’alimentazione nei bambini da 2 a 10 anni \nLa Colazione \nLa colazione è un momento essenziale della giornata, poiché fornisce ai bambini l’energia e "
+        },
+        {
+          "fonte": "OKKio.pdf",
+          "pagina": 0,
+          "testo_preview": "fisica sufficiente per la sua età. Inoltre, i genitori riferiscono che quasi 1 bambino su 3 (il 31%) \ntrascorre più di 2 ore al giorno davanti alla TV"
+        }
+      ],
+      "risposta": "Certamente! È un'ottima iniziativa promuovere spuntini sani e variati per i suoi alunni. Per i bambini di 10 anni, che hanno bisogno di energia per le attività scolastiche e il gioco, ci sono diverse opzioni gustose e nutrienti che possono sostituire le merendine.\n\nEcco alcuni suggerimenti basati sulle linee guida per l'alimentazione dei bambini:\n\n*   **Frutta fresca:** Un'abitudine eccellente è includere frutta fresca. Si può proporre da sola o abbinata ad altri alimenti. (Fonte 1)\n*   **Yogurt bianco:** Ottimo da solo o con l'aggiunta di frutta fresca. (Fonte 1, Fonte 5)\n*   **Frutta secca:** Noci, mandorle o altra frutta secca possono essere un'ottima fonte di energia. (Fonte 1)\n*   **Prodotti da forno semplici:** Grissini o crackers sono un'alternativa pratica. (Fonte 1)\n*   **Verdure fresche in pinzimonio:** Bastoncini di carota, finocchio e sedano da intingere in un po' d'olio e sale possono essere un modo divertente per consumare verdura. (Fonte 1, Fonte 2)\n*   **Pane con olio o verdure:** Una fetta di pane integrale con un filo d'olio o verdure. (Fonte 1)\n*   **Pane e ricotta:** Una fetta di pane integrale con ricotta fresca, magari con un cucchiaino di miele o marmellata per un tocco di dolcezza. (Fonte 2)\n*   **Frullato di frutta:** Frutta di stagione frullata con latte o bevanda vegetale senza zuccheri aggiunti. (Fonte 2)\n*   **Castagne (in stagione):** Se è la stagione, le castagne bollite o arrostite sono una buona fonte di energia e fibre. (Fonte 2)\n*   **Spremuta:** Una spremuta di frutta fresca può essere una merenda leggera e rinfrescante. (Fonte 5)\n\nÈ fondamentale proporre frutta e verdura 5 volte al giorno, sia durante che fuori dai pasti, e favorire il consumo di acqua. (Fonte 3, Fonte 5)\n\nQuesti spuntini forniscono energia senza essere troppo abbondanti, evitando di interferire con l'appetito ai pasti principali e di introdurre troppe calorie. (Fonte 1)\n\nSpero che questi suggerimenti possano esserle utili per offrire ai suoi alunni merende sane e variegate!\n\nRiferimenti:\n*   alimentazione 2-10.pdf, pag. 1, 3, 0\n*   OKKio.pdf, pag. 0",
+      "latenza_ms": 19109
+    }
+  ]
+}

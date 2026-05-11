@@ -1,0 +1,43 @@
+{
+  "timestamp_avvio": "2026-05-10T20:22:34.716207",
+  "modello_llm": "gemini-2.5-flash",
+  "modello_retriever": "gemini-embedding-001 k=5",
+  "profilo_rilevato": "genitore",
+  "interazioni": [
+    {
+      "timestamp": "2026-05-10T20:23:09.763655",
+      "profilo": "genitore",
+      "query_originale": "cosa do da mangiare per mereneda a mio figlio di 3 anni al posto delle merendine?",
+      "query_riscritta": "Bambino 3 anni merenda spuntino salutare alternative merendine industriali prevenzione obesità infantile alimenti freschi senza zuccheri aggiunti.",
+      "chunks_recuperati": [
+        {
+          "fonte": "alimentazione 2-10.pdf",
+          "pagina": 1,
+          "testo_preview": "Gli spuntini forniscono energia per le attività quotidiane dei bambini, aiutandoli a non arrivare \neccessivamente affamati ai pasti principali. Tuttav"
+        },
+        {
+          "fonte": "OKKio.pdf",
+          "pagina": 0,
+          "testo_preview": "fisica sufficiente per la sua età. Inoltre, i genitori riferiscono che quasi 1 bambino su 3 (il 31%) \ntrascorre più di 2 ore al giorno davanti alla TV"
+        },
+        {
+          "fonte": "alimentazione 2-10.pdf",
+          "pagina": 3,
+          "testo_preview": "zuccherato. \n3. Pinzimonio colorato: Bastoncini di carota, finocchio e sedano da intingere in un po' \nd'olio e sale. \n4. Pane e ricotta: Una fetta di "
+        },
+        {
+          "fonte": "OKKio.pdf",
+          "pagina": 0,
+          "testo_preview": "spremuta. \n• Frutta, verdura e bevande: È fondamentale proporre 5 volte al giorno frutta e verdura, \nsia durante che fuori dai pasti. In famiglia biso"
+        },
+        {
+          "fonte": "alimentazione 2-10.pdf",
+          "pagina": 0,
+          "testo_preview": "L’alimentazione nei bambini da 2 a 10 anni \nLa Colazione \nLa colazione è un momento essenziale della giornata, poiché fornisce ai bambini l’energia e "
+        }
+      ],
+      "risposta": "Capisco benissimo la tua domanda, è un pensiero comune per molti genitori voler offrire ai propri figli spuntini sani e gustosi, alternativi alle merendine confezionate. È un'ottima idea, perché gli spuntini sono importanti per dare energia ai bambini durante la giornata, senza però appesantirli troppo prima dei pasti principali.\n\nEcco alcune idee pratiche e sane che puoi proporre al tuo bambino di 3 anni per la merenda, basate sulle indicazioni che abbiamo:\n\n*   **Frutta fresca:** È un'ottima abitudine includere frutta fresca in almeno uno dei due spuntini. Puoi offrirla da sola o abbinarla ad altro.\n*   **Yogurt bianco:** Un'altra scelta eccellente, magari con l'aggiunta di un",
+      "latenza_ms": 14493
+    }
+  ]
+}
