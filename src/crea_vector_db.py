@@ -10,8 +10,7 @@ import os
 import pickle
 from typing import List
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.embeddings import Embeddings
 from langchain_core.documents import Document
@@ -25,60 +24,29 @@ load_dotenv()
 
 CARTELLA_DB    = "./chroma_db"
 PERCORSO_BM25  = "./chroma_db/bm25_index.pkl"
-MODELLO_EMBED  = "models/gemini-embedding-001"
-API_VERSION    = "v1beta"
-RETRIEVER_K    = 5
-PESO_VETTORIALE = 0.6   # peso della similarity search nel punteggio ibrido
-PESO_BM25       = 0.4   # peso del BM25 nel punteggio ibrido
+MODELLO_EMBED  = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+RETRIEVER_K       = 5
+PESO_VETTORIALE   = 0.6    # peso della similarity search nel punteggio ibrido
+PESO_BM25         = 0.4    # peso del BM25 nel punteggio ibrido
+SOGLIA_PERTINENZA = 0.25   # chunk con punteggio ibrido inferiore vengono scartati
+RERANKER_K        = 15     # candidati recuperati prima del reranking
 
 
 # ---------------------------------------------------------------------------
 # Client e modello di embedding
 # ---------------------------------------------------------------------------
 
-def _get_client() -> genai.Client:
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise EnvironmentError("GOOGLE_API_KEY non trovata. Controlla il file .env.")
-    return genai.Client(
-        api_key=api_key,
-        http_options=types.HttpOptions(api_version=API_VERSION),
+def _get_embeddings() -> HuggingFaceEmbeddings:
+    """
+    Istanzia il modello di embedding HuggingFace in locale.
+    Il modello paraphrase-multilingual-mpnet-base-v2 supporta l'italiano
+    e non richiede API key ne connessione internet dopo il primo download.
+    """
+    return HuggingFaceEmbeddings(
+        model_name=MODELLO_EMBED,
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True},
     )
-
-
-class GeminiEmbeddings(Embeddings):
-    """
-    Wrapper LangChain-compatibile per il modello di embedding Gemini.
-    Distingue tra task_type RETRIEVAL_DOCUMENT (indicizzazione)
-    e RETRIEVAL_QUERY (interrogazione) per ottimizzare la qualita degli embedding.
-    """
-
-    def __init__(self, model: str = MODELLO_EMBED):
-        self.model  = model
-        self.client = _get_client()
-
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        risultati = []
-        for testo in texts:
-            risposta = self.client.models.embed_content(
-                model=self.model,
-                contents=testo,
-                config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
-            )
-            risultati.append(risposta.embeddings[0].values)
-        return risultati
-
-    def embed_query(self, text: str) -> List[float]:
-        risposta = self.client.models.embed_content(
-            model=self.model,
-            contents=text,
-            config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY"),
-        )
-        return risposta.embeddings[0].values
-
-
-def _get_embeddings() -> GeminiEmbeddings:
-    return GeminiEmbeddings(model=MODELLO_EMBED)
 
 
 # ---------------------------------------------------------------------------
@@ -271,15 +239,96 @@ class RetrieverIbrido:
             key=lambda x: x["score_ibrido"],
             reverse=True,
         )
-        return [entry["doc"] for entry in ordinati[: self.k]]
+
+        # Filtro soglia pertinenza
+        filtrati = [e for e in ordinati if e["score_ibrido"] >= SOGLIA_PERTINENZA]
+        if not filtrati:
+            filtrati = ordinati  # fallback senza filtro
+
+        return [entry["doc"] for entry in filtrati[: self.k]]
+
+
+# ---------------------------------------------------------------------------
+# Prompt per il reranking dei chunk
+# ---------------------------------------------------------------------------
+
+PROMPT_RERANKING = """Sei un sistema di information retrieval per documenti scientifici
+italiani su nutrizione pediatrica e obesita' infantile.
+
+Valuta la pertinenza del seguente chunk rispetto alla query dell'utente.
+Rispondi SOLO con un numero intero da 0 a 10 (0 = irrilevante, 10 = perfettamente pertinente).
+Nessuna spiegazione, solo il numero.
+
+Query: {query}
+
+Chunk:
+{chunk}
+
+Pertinenza (0-10):"""
+
+
+def rerank_chunks(chunks: list, query: str, llm, k: int = RETRIEVER_K) -> list:
+    """
+    Riordina i chunk per pertinenza usando il LLM come cross-encoder leggero.
+    Recupera RERANKER_K candidati, assegna un punteggio 0-10 a ciascuno,
+    e restituisce i migliori k dopo il filtraggio per soglia.
+
+    Args:
+        chunks   : lista di Document candidati dal retriever ibrido.
+        query    : query originale o riscritta.
+        llm      : istanza ChatGroq per il reranking.
+        k        : numero di chunk finali da restituire.
+
+    Returns:
+        Lista ordinata dei migliori chunk dopo reranking e filtro soglia.
+    """
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_core.output_parsers import StrOutputParser
+
+    parser = StrOutputParser()
+    punteggi = []
+
+    for chunk in chunks:
+        prompt = ChatPromptTemplate.from_messages([
+            ("human", PROMPT_RERANKING.format(
+                query=query,
+                chunk=chunk.page_content[:500],
+            ))
+        ])
+        try:
+            chain     = prompt | llm | parser
+            risultato = chain.invoke({}).strip()
+            # Estrae il primo numero intero dalla risposta
+            numeri = [int(x) for x in risultato.split() if x.isdigit()]
+            punteggio = numeri[0] if numeri else 0
+        except Exception:
+            punteggio = 0
+        punteggi.append(punteggio)
+
+    # Associa punteggi e ordina
+    chunk_con_score = sorted(
+        zip(chunks, punteggi),
+        key=lambda x: x[1],
+        reverse=True,
+    )
+
+    # Filtra per soglia (scala 0-10 -> soglia minima 3)
+    chunk_filtrati = [c for c, s in chunk_con_score if s >= 3]
+
+    if not chunk_filtrati:
+        # Fallback: restituisce i migliori k senza filtro
+        return [c for c, _ in chunk_con_score[:k]]
+
+    return chunk_filtrati[:k]
 
 
 def get_retriever(vector_store: Chroma, k: int = RETRIEVER_K) -> RetrieverIbrido:
     """
     Restituisce il retriever ibrido (vettoriale + BM25).
     Firma identica al vecchio get_retriever per compatibilita con chatbot.py.
+    Il reranking viene applicato in chatbot.py dopo il retrieval.
     """
-    return RetrieverIbrido(vector_store=vector_store, k=k)
+    return RetrieverIbrido(vector_store=vector_store, k=RERANKER_K)
 
 
 # ---------------------------------------------------------------------------

@@ -13,12 +13,12 @@ import time
 import re
 from datetime import datetime
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 
-from crea_vector_db import get_o_crea_vector_db, get_retriever
+from crea_vector_db import get_o_crea_vector_db, get_retriever, rerank_chunks, RETRIEVER_K
 
 load_dotenv()
 
@@ -26,10 +26,10 @@ load_dotenv()
 # Parametri globali
 # ---------------------------------------------------------------------------
 
-MODELLO_LLM  = "gemini-2.5-flash"
+MODELLO_LLM  = "llama-3.3-70b-versatile"
 TEMPERATURE  = 0.2
-MAX_TOKENS   = 2048
-RETRIEVER_K  = 5
+MAX_TOKENS   = 1024
+# RETRIEVER_K importato da crea_vector_db
 DEBUG_MODE   = False
 CARTELLA_LOG = "./logs"
 
@@ -43,6 +43,7 @@ PROFILI = {
         "etichetta": "Genitore",
         "emoji": "Genitore",
         "descrizione": "Genitore o tutore di un bambino",
+        "temperature": 0.3,
         "prompt": (
             "Sei un assistente virtuale specializzato in nutrizione pediatrica e prevenzione "
             "dell'obesita infantile (fascia 0-10 anni). Stai parlando con un GENITORE.\n"
@@ -62,6 +63,7 @@ PROFILI = {
         "etichetta": "Insegnante",
         "emoji": "Insegnante",
         "descrizione": "Insegnante o educatore scolastico",
+        "temperature": 0.3,
         "prompt": (
             "Sei un assistente virtuale specializzato in nutrizione pediatrica e prevenzione "
             "dell'obesita infantile. Stai parlando con un INSEGNANTE o EDUCATORE.\n"
@@ -81,6 +83,7 @@ PROFILI = {
         "etichetta": "Pediatra",
         "emoji": "Pediatra",
         "descrizione": "Medico pediatra o medico di base",
+        "temperature": 0.0,
         "prompt": (
             "Sei un assistente virtuale specializzato in nutrizione pediatrica e prevenzione "
             "dell'obesita infantile. Stai parlando con un PEDIATRA o MEDICO.\n"
@@ -100,6 +103,7 @@ PROFILI = {
         "etichetta": "Nutrizionista",
         "emoji": "Nutrizionista",
         "descrizione": "Nutrizionista o dietista",
+        "temperature": 0.1,
         "prompt": (
             "Sei un assistente virtuale specializzato in nutrizione pediatrica e prevenzione "
             "dell'obesita infantile. Stai parlando con un NUTRIZIONISTA o DIETISTA.\n"
@@ -119,6 +123,7 @@ PROFILI = {
         "etichetta": "Ricercatore",
         "emoji": "Ricercatore",
         "descrizione": "Ricercatore, studente universitario o accademico",
+        "temperature": 0.0,
         "prompt": (
             "Sei un assistente virtuale specializzato in nutrizione pediatrica e prevenzione "
             "dell'obesita infantile. Stai parlando con un RICERCATORE o STUDENTE UNIVERSITARIO.\n"
@@ -237,11 +242,7 @@ class AssistenteRAG:
     def __init__(self):
         print("Inizializzazione sistema RAG...")
 
-        self.llm = ChatGoogleGenerativeAI(
-            model=MODELLO_LLM,
-            temperature=TEMPERATURE,
-            max_output_tokens=MAX_TOKENS,
-        )
+        self.llm = None   # inizializzato per profilo in rispondi()
         self.parser = StrOutputParser()
 
         db = get_o_crea_vector_db()
@@ -261,7 +262,8 @@ class AssistenteRAG:
         prompt = ChatPromptTemplate.from_messages([
             ("human", PROMPT_CLASSIFICAZIONE.format(messaggio=messaggio))
         ])
-        chain     = prompt | self.llm | self.parser
+        llm_temp  = ChatGroq(model=MODELLO_LLM, temperature=0.0, max_tokens=50)
+        chain     = prompt | llm_temp | self.parser
         risultato = chain.invoke({}).strip().lower()
         for profilo in PROFILI:
             if profilo in risultato:
@@ -280,7 +282,8 @@ class AssistenteRAG:
                 domanda=domanda,
             ))
         ])
-        chain          = prompt | self.llm | self.parser
+        llm_temp       = ChatGroq(model=MODELLO_LLM, temperature=0.0, max_tokens=200)
+        chain          = prompt | llm_temp | self.parser
         query_riscritta = chain.invoke({}).strip()
         return query_riscritta if query_riscritta else domanda
 
@@ -330,14 +333,20 @@ class AssistenteRAG:
         docs     = self.retriever.invoke(query_riscritta)
         contesto = self._formatta_contesto(docs)
 
-        # Generazione
-        system_prompt = PROFILI[self.profilo_corrente]["prompt"]
+        # Generazione con temperatura specifica per profilo
+        temperatura    = PROFILI[self.profilo_corrente]["temperature"]
+        system_prompt  = PROFILI[self.profilo_corrente]["prompt"]
+        llm_profilo    = ChatGroq(
+            model=MODELLO_LLM,
+            temperature=temperatura,
+            max_tokens=MAX_TOKENS,
+        )
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
             MessagesPlaceholder(variable_name="cronologia"),
             ("human", "{domanda}"),
         ])
-        chain    = prompt | self.llm | self.parser
+        chain    = prompt | llm_profilo | self.parser
         risposta = chain.invoke({
             "context":    contesto,
             "cronologia": self.cronologia,
