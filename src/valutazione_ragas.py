@@ -224,7 +224,13 @@ def main():
         "--domande",
         type=int,
         default=None,
-        help="Limita il numero di domande (utile per test rapidi).",
+        help="Limita il numero di domande (taglia i primi N dal dataset).",
+    )
+    parser.add_argument(
+        "--per-profilo",
+        type=int,
+        default=None,
+        help="Prende N domande per ciascun profilo (totale = 5 * N). Coverage uniforme.",
     )
     args = parser.parse_args()
     if not os.getenv("GOOGLE_API_KEY"):
@@ -245,6 +251,13 @@ def main():
     print("\nCaricamento dataset...")
     campioni = carica_dataset(percorso_dataset, filtro_profilo=args.profilo)
     print(f"  Campioni caricati: {len(campioni)}")
+    if args.per_profilo:
+        bilanciati = []
+        for prof in PROFILI:
+            del_prof = [c for c in campioni if c["profilo"] == prof][:args.per_profilo]
+            bilanciati.extend(del_prof)
+        campioni = bilanciati
+        print(f"  Campionamento bilanciato: {args.per_profilo}/profilo -> {len(campioni)} totali")
     print("\nEsecuzione pipeline RAG sul dataset...")
     risultati = esegui_pipeline(campioni, max_domande=args.domande)
     metriche = calcola_metriche(risultati)

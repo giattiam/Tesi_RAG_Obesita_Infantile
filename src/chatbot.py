@@ -15,11 +15,11 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
-from crea_vector_db import get_o_crea_vector_db, get_retriever, rerank_chunks, RETRIEVER_K
+from crea_vector_db import get_o_crea_vector_db, get_retriever, rerank_chunks, RETRIEVER_K, MODELLO_EMBED
 load_dotenv()
 MODELLO_LLM  = "gemini-2.5-flash"
 TEMPERATURE  = 0.2
-MAX_TOKENS   = 1024
+MAX_TOKENS   = 2048
 DEBUG_MODE   = False
 CARTELLA_LOG = "./logs"
 
@@ -169,7 +169,7 @@ class SessionLogger:
         self.sessione = {
             "timestamp_avvio": datetime.now().isoformat(),
             "modello_llm": MODELLO_LLM,
-            "modello_retriever": f"gemini-embedding-001 k={RETRIEVER_K}",
+            "modello_retriever": f"{MODELLO_EMBED} k={RETRIEVER_K}",
             "profilo_rilevato": None,
             "interazioni": [],
         }
@@ -229,7 +229,7 @@ class AssistenteRAG:
         prompt = ChatPromptTemplate.from_messages([
             ("human", PROMPT_CLASSIFICAZIONE.format(messaggio=messaggio))
         ])
-        llm_temp  = get_llm(temperature=0.0, max_tokens=50)
+        llm_temp  = get_llm(temperature=0.0, max_tokens=1024)
         chain     = prompt | llm_temp | self.parser
         risultato = chain.invoke({}).strip().lower()
         for profilo in PROFILI:
@@ -248,7 +248,7 @@ class AssistenteRAG:
                 domanda=domanda,
             ))
         ])
-        llm_temp       = get_llm(temperature=0.0, max_tokens=200)
+        llm_temp       = get_llm(temperature=0.0, max_tokens=1024)
         chain          = prompt | llm_temp | self.parser
         query_riscritta = chain.invoke({}).strip()
         return query_riscritta if query_riscritta else domanda
