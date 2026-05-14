@@ -108,5 +108,45 @@
     "profilo": "ricercatore",
     "domanda": "Quali interventi sono raccomandati a livello scolastico per la promozione dell'attivita fisica secondo le linee di indirizzo italiane?",
     "ground_truth": "Le linee di indirizzo raccomandano un approccio scolastico globale o sistemico progettato in raccordo tra settore scolastico e sanitario con un team dedicato. Gli interventi includono: pause attive di circa 10 minuti che migliorano salute e profitto scolastico, mobilita attiva casa-scuola tramite pedibus per la primaria e bicibus per la secondaria, progetti come Joy of Moving e Sport di classe per la primaria. E importante assecondare la tendenza dei bambini a muoversi attraverso giochi di movimento e favorire l'inclusione degli alunni disabili."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Quali sono i criteri diagnostici per definire sovrappeso e obesita' in eta' evolutiva?",
+    "ground_truth": "In eta' evolutiva e' impossibile utilizzare valori standard per definire sovrappeso e obesita'. Nella pratica clinica e' necessario fare riferimento alle curve dei centili del BMI. Un bambino e' considerato in sovrappeso quando il BMI si colloca tra l'85° e il 95° centile, e obeso quando supera il 95° centile per eta' e sesso."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Quando e' indicata la terapia farmacologica nel trattamento dell'obesita' pediatrica?",
+    "ground_truth": "La modifica dello stile di vita rimane il cardine per la gestione del peso nei bambini e adolescenti obesi. Per coloro che non sono in grado di raggiungere una perdita di peso clinicamente significativa con i soli interventi sullo stile di vita, l'uso combinato di trattamenti piu' intensivi che includano la terapia farmacologica puo' essere preso in considerazione soprattutto in presenza di comorbidita' come dislipidemia, ipertensione, insulino-resistenza, steatosi epatica e apnea ostruttiva del sonno."
+  },
+  {
+    "profilo": "ricercatore",
+    "domanda": "Quali livelli di prova supportano l'intervento dietetico nell'obesita' pediatrica secondo le linee guida SIEDP?",
+    "ground_truth": "Secondo le linee guida SIEDP, si raccomanda che i bambini dopo i 2 anni di vita seguano un'alimentazione a bassa densita' calorica basata sui principi della dieta mediterranea, con almeno 5 porzioni tra frutta, verdura e ortaggi, privilegiando le fonti vegetali di proteine e ripartita in circa 5 pasti giornalieri, con livello di prova V e forza della raccomandazione A. L'efficacia sulla riduzione del BMI z-score di programmi basati su alimentazione e stile di vita e' stata dimostrata solo nel breve termine di 6-12 mesi."
+  },
+  {
+    "profilo": "ricercatore",
+    "domanda": "Quali risultati hanno ottenuto gli studi italiani sul trattamento dell'obesita' infantile?",
+    "ground_truth": "Gli unici studi italiani basati su educazione alimentare, strategie cognitive o cognitivo-comportamentali e coinvolgimento della famiglia hanno riportato rispettivamente una riduzione del BMI z-score di 0,44 dopo tre anni e una riduzione del BMI z-score di 1,49, con modifica dei comportamenti disfunzionali e miglioramento degli aspetti sociali ed emotivi dopo 5 anni di follow up."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Quali complicanze psicosociali sono associate all'obesita' infantile?",
+    "ground_truth": "I bambini obesi sono frequentemente esclusi dalle attivita' motorie competitive e subiscono un considerevole stress psicologico. L'obesita' puo' minare l'autostima e condurre alla costruzione di un'immagine corporea negativa. Esiste una correlazione tra obesita' e bullismo: i ragazzi obesi tra gli 11 e i 16 anni sono piu' frequentemente vittime di bullismo verbale e fisico. L'insoddisfazione per l'immagine corporea associata all'obesita' puo' essere correlata all'aumento di prevalenza di disturbi dell'alimentazione come bulimia nervosa e binge eating disorder."
+  },
+  {
+    "profilo": "nutrizionista",
+    "domanda": "Quali sono le raccomandazioni dietetiche per bambini obesi secondo il Consensus SIEDP?",
+    "ground_truth": "Si raccomanda che i bambini dopo i 2 anni seguano un'alimentazione a bassa densita' calorica basata sui principi della dieta mediterranea con almeno 5 porzioni tra frutta, verdura e ortaggi, privilegiando le fonti vegetali di proteine e ripartita in circa 5 pasti giornalieri. Il consumo di bevande zuccherate e' associato a un aumento di peso per il contenuto in zucchero, il ridotto senso di sazietà e l'incompleta riduzione compensatoria dell'assunzione energetica ai pasti successivi. L'uso di pasti sostitutivi non e' raccomandato."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Cosa sono i primi 1000 giorni e perche' sono importanti per prevenire l'obesita'?",
+    "ground_truth": "I primi 1000 giorni di vita, dal concepimento ai due anni, rappresentano un periodo critico in cui l'alimentazione puo' avere effetti a lungo termine sulla salute futura. Un'alimentazione errata o problematiche metaboliche durante la gravidanza o i primi 2 anni di vita possono favorire l'iperplasia della cellula adipocitaria e attivare meccanismi epigenetici responsabili dell'aumento del peso. I bambini nutriti con una dieta che preveda proteine in eccesso nei primi mille giorni presentano modificazioni epigenetiche che li predispongono a sviluppare obesita' e patologie metaboliche."
+  },
+  {
+    "profilo": "insegnante",
+    "domanda": "Quali strategie intersettoriali sono raccomandate per la prevenzione dell'obesita' infantile a scuola?",
+    "ground_truth": "Le azioni di prevenzione devono essere multicomponenti e basate su alleanze tra Aziende Sanitarie e partner locali come Comuni, scuole, associazioni sportive, produttori alimentari e ditte di ristorazione. Gli interventi educativi dovrebbero essere progettati secondo un approccio scolastico globale condiviso tra settore scolastico e sanitario, coinvolgendo dirigenti, docenti, operatori sanitari, esperti in scienze motorie e operatori sportivi. L'educazione deve incentivare il consumo di 5 porzioni al giorno di frutta e verdura e insegnare a bere acqua per soddisfare la sete."
   }
 ]

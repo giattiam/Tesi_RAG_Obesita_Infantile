@@ -1,11 +1,9 @@
 """
 chatbot.py
-
 Interfaccia conversazionale per il sistema RAG sull'obesita infantile.
 Gestisce il rilevamento del profilo utente, la riformulazione delle query,
 il recupero contestuale dal vector store e la generazione delle risposte.
 """
-
 import os
 import sys
 import json
@@ -13,31 +11,31 @@ import time
 import re
 from datetime import datetime
 from dotenv import load_dotenv
-from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
-
 from crea_vector_db import get_o_crea_vector_db, get_retriever, rerank_chunks, RETRIEVER_K
-
 load_dotenv()
-
-# ---------------------------------------------------------------------------
-# Parametri globali
-# ---------------------------------------------------------------------------
-
-MODELLO_LLM  = "llama-3.3-70b-versatile"
+MODELLO_LLM  = "gemini-2.5-flash"
 TEMPERATURE  = 0.2
 MAX_TOKENS   = 1024
-# RETRIEVER_K importato da crea_vector_db
 DEBUG_MODE   = False
 CARTELLA_LOG = "./logs"
 
-# ---------------------------------------------------------------------------
-# Definizione dei profili utente
-# Ogni profilo ha un system prompt calibrato sul destinatario.
-# ---------------------------------------------------------------------------
-
+def get_llm(temperature: float = TEMPERATURE, max_tokens: int = MAX_TOKENS) -> ChatGoogleGenerativeAI:
+    """
+    Factory dell'LLM puntato su Google AI Studio (Gemini API).
+    Centralizza la configurazione del modello, della temperatura e dei retry.
+    """
+    return ChatGoogleGenerativeAI(
+        model=MODELLO_LLM,
+        temperature=temperature,
+        max_output_tokens=max_tokens,
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        max_retries=6,
+        timeout=120,
+    )
 PROFILI = {
     "genitore": {
         "etichetta": "Genitore",
@@ -140,11 +138,6 @@ PROFILI = {
         ),
     },
 }
-
-# ---------------------------------------------------------------------------
-# Prompt di classificazione del profilo
-# ---------------------------------------------------------------------------
-
 PROMPT_CLASSIFICAZIONE = """Analizza il seguente messaggio e classifica chi lo ha scritto.
 Scegli UNO dei seguenti profili in base a tono, vocabolario e contenuto:
 - genitore: linguaggio familiare, riferimenti a "mio figlio/figlia", preoccupazioni quotidiane
@@ -152,29 +145,15 @@ Scegli UNO dei seguenti profili in base a tono, vocabolario e contenuto:
 - pediatra: terminologia medica, riferimenti a pazienti, diagnosi, percentili
 - nutrizionista: termini come macronutrienti, LARN, dieta, piano alimentare
 - ricercatore: linguaggio accademico, riferimenti a studi, dati, ricerca, tesi
-
 Messaggio: "{messaggio}"
-
 Rispondi con UNA SOLA PAROLA tra: genitore, insegnante, pediatra, nutrizionista, ricercatore"""
-
-# ---------------------------------------------------------------------------
-# Prompt di riformulazione della query per il retrieval semantico
-# ---------------------------------------------------------------------------
-
 PROMPT_QUERY_REWRITING = """Sei un esperto di information retrieval applicato alla nutrizione pediatrica.
 Riscrivi la domanda seguente come query ottimizzata per la ricerca semantica in un database
 di documenti scientifici italiani su alimentazione e obesita infantile (0-10 anni).
 La query deve essere specifica, usare termini tecnici pertinenti e catturare l'intento reale.
 Tieni conto che l'utente e un: {profilo}
-
 Domanda originale: "{domanda}"
-
 Rispondi SOLO con la query riscritta, senza spiegazioni o testo aggiuntivo."""
-
-
-# ---------------------------------------------------------------------------
-# Logging delle sessioni su file JSON
-# ---------------------------------------------------------------------------
 
 class SessionLogger:
     """
@@ -183,7 +162,6 @@ class SessionLogger:
     Struttura di ogni log: profilo rilevato, query originale, query riscritta,
     chunks recuperati (fonte, pagina, anteprima testo), risposta, latenza.
     """
-
     def __init__(self):
         os.makedirs(CARTELLA_LOG, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -195,7 +173,6 @@ class SessionLogger:
             "profilo_rilevato": None,
             "interazioni": [],
         }
-
     def log_interazione(self, profilo, query_originale, query_riscritta,
                         chunks, risposta, latenza_ms):
         self.sessione["profilo_rilevato"] = profilo
@@ -216,20 +193,13 @@ class SessionLogger:
             "latenza_ms": latenza_ms,
         })
         self._salva()
-
     def _salva(self):
         with open(self.filepath, "w", encoding="utf-8") as f:
             json.dump(self.sessione, f, ensure_ascii=False, indent=2)
 
-
-# ---------------------------------------------------------------------------
-# Classe principale del sistema RAG
-# ---------------------------------------------------------------------------
-
 class AssistenteRAG:
     """
     Pipeline RAG con rilevamento profilo, query rewriting e memoria conversazionale.
-
     Flusso per ogni domanda:
     1. Rilevamento profilo (solo al primo messaggio)
     2. Riformulazione della query tramite LLM
@@ -238,22 +208,19 @@ class AssistenteRAG:
     5. Aggiornamento della memoria conversazionale
     6. Logging su file JSON
     """
-
-    def __init__(self):
-        print("Inizializzazione sistema RAG...")
-
-        self.llm = None   # inizializzato per profilo in rispondi()
+    def __init__(self, retriever):
+        """
+        Crea un nuovo assistente leggero che riusa un retriever gia' inizializzato.
+        Lo state per-sessione (cronologia, profilo) e' isolato per ogni istanza,
+        mentre il retriever (modello embedding + vector store) viene condiviso a
+        livello di processo tramite il singleton in crea_vector_db.
+        """
+        self.llm = None
         self.parser = StrOutputParser()
-
-        db = get_o_crea_vector_db()
-        self.retriever = get_retriever(db, k=RETRIEVER_K)
-
+        self.retriever = retriever
         self.profilo_corrente: str | None = None
         self.cronologia: list = []
         self.logger = SessionLogger()
-
-        print("Sistema pronto.\n")
-
     def _rileva_profilo(self, messaggio: str) -> str:
         """
         Invia il primo messaggio al LLM con un prompt di classificazione
@@ -262,14 +229,13 @@ class AssistenteRAG:
         prompt = ChatPromptTemplate.from_messages([
             ("human", PROMPT_CLASSIFICAZIONE.format(messaggio=messaggio))
         ])
-        llm_temp  = ChatGroq(model=MODELLO_LLM, temperature=0.0, max_tokens=50)
+        llm_temp  = get_llm(temperature=0.0, max_tokens=50)
         chain     = prompt | llm_temp | self.parser
         risultato = chain.invoke({}).strip().lower()
         for profilo in PROFILI:
             if profilo in risultato:
                 return profilo
         return "genitore"
-
     def _riscrivi_query(self, domanda: str) -> str:
         """
         Riformula la domanda dell'utente in una query ottimizzata per la
@@ -282,11 +248,10 @@ class AssistenteRAG:
                 domanda=domanda,
             ))
         ])
-        llm_temp       = ChatGroq(model=MODELLO_LLM, temperature=0.0, max_tokens=200)
+        llm_temp       = get_llm(temperature=0.0, max_tokens=200)
         chain          = prompt | llm_temp | self.parser
         query_riscritta = chain.invoke({}).strip()
         return query_riscritta if query_riscritta else domanda
-
     def _formatta_contesto(self, docs: list) -> str:
         """Costruisce il blocco di contesto da passare al prompt di generazione."""
         sezioni = []
@@ -300,7 +265,6 @@ class AssistenteRAG:
             )
             sezioni.append(f"{intestazione}\n{doc.page_content}")
         return "\n\n".join(sezioni)
-
     def _stampa_fonti(self, docs: list, query_riscritta: str) -> None:
         titoli = sorted(set(
             doc.metadata.get("titolo_documento", "Sconosciuto") for doc in docs
@@ -311,36 +275,23 @@ class AssistenteRAG:
             for i, doc in enumerate(docs, 1):
                 print(f"  [{i}] {doc.metadata.get('titolo_documento', '?')} "
                       f"- {doc.page_content[:120]}...")
-
     def rispondi(self, domanda: str) -> str:
         """
         Esegue la pipeline completa e restituisce la risposta testuale.
         Registra l'interazione nel log di sessione.
         """
         t_start = time.time()
-
-        # Rilevamento profilo al primo messaggio
         if self.profilo_corrente is None:
             self.profilo_corrente = self._rileva_profilo(domanda)
             p = PROFILI[self.profilo_corrente]
             print(f"\nProfilo rilevato: {p['etichetta']}")
             print("(Digita 'profilo' per cambiarlo manualmente)\n")
-
-        # Riformulazione query
         query_riscritta = self._riscrivi_query(domanda)
-
-        # Retrieval
         docs     = self.retriever.invoke(query_riscritta)
         contesto = self._formatta_contesto(docs)
-
-        # Generazione con temperatura specifica per profilo
         temperatura    = PROFILI[self.profilo_corrente]["temperature"]
         system_prompt  = PROFILI[self.profilo_corrente]["prompt"]
-        llm_profilo    = ChatGroq(
-            model=MODELLO_LLM,
-            temperature=temperatura,
-            max_tokens=MAX_TOKENS,
-        )
+        llm_profilo    = get_llm(temperature=temperatura, max_tokens=MAX_TOKENS)
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
             MessagesPlaceholder(variable_name="cronologia"),
@@ -352,14 +303,10 @@ class AssistenteRAG:
             "cronologia": self.cronologia,
             "domanda":    domanda,
         })
-
-        # Aggiornamento memoria (finestra scorrevole: ultimi 10 messaggi = 5 turni)
         self.cronologia.append(HumanMessage(content=domanda))
         self.cronologia.append(AIMessage(content=risposta))
         if len(self.cronologia) > 10:
             self.cronologia = self.cronologia[-10:]
-
-        # Log
         latenza_ms = int((time.time() - t_start) * 1000)
         self.logger.log_interazione(
             profilo=self.profilo_corrente,
@@ -369,14 +316,11 @@ class AssistenteRAG:
             risposta=risposta,
             latenza_ms=latenza_ms,
         )
-
         self._stampa_fonti(docs, query_riscritta)
         return risposta
-
     def reset_memoria(self) -> None:
         self.cronologia = []
         print("Memoria conversazionale azzerata.")
-
     def cambia_profilo(self) -> None:
         """Menu interattivo per la selezione manuale del profilo."""
         print("\nProfili disponibili:")
@@ -395,17 +339,10 @@ class AssistenteRAG:
                 print("Numero fuori range.")
         except ValueError:
             print("Input non valido.")
-
-
-# ---------------------------------------------------------------------------
-# Loop conversazionale a riga di comando
-# ---------------------------------------------------------------------------
-
 COMANDI_USCITA  = {"esci", "quit", "exit", "stop", "q"}
 COMANDI_RESET   = {"reset", "nuova", "ricomincia"}
 COMANDI_DEBUG   = {"debug"}
 COMANDI_PROFILO = {"profilo", "profile", "cambia profilo"}
-
 
 def chat_loop(assistente: AssistenteRAG) -> None:
     print("=" * 62)
@@ -415,21 +352,16 @@ def chat_loop(assistente: AssistenteRAG) -> None:
     print("-" * 62)
     print("  Il profilo viene rilevato automaticamente dal primo messaggio.")
     print("=" * 62)
-
     global DEBUG_MODE
-
     while True:
         try:
             user_input = input("\nUtente: ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nArrivederci.")
             break
-
         if not user_input:
             continue
-
         cmd = user_input.lower()
-
         if cmd in COMANDI_USCITA:
             print("Arrivederci.")
             break
@@ -443,9 +375,7 @@ def chat_loop(assistente: AssistenteRAG) -> None:
         if cmd in COMANDI_PROFILO:
             assistente.cambia_profilo()
             continue
-
         print("\nRicerca in corso...", end="", flush=True)
-
         try:
             risposta = assistente.rispondi(user_input)
             print("\r" + " " * 30 + "\r", end="")
@@ -463,18 +393,18 @@ def chat_loop(assistente: AssistenteRAG) -> None:
                     print(f"\nRisposta:\n{risposta}")
                 except Exception as e2:
                     print(f"\nQuota giornaliera esaurita: {e2}")
-                    print("Attivare la fatturazione su https://aistudio.google.com oppure riprovare domani.")
+                    print("Verifica i limiti su https://aistudio.google.com oppure riprova piu' tardi.")
             else:
                 print(f"\nErrore: {e}")
                 print("Riprovare o digitare 'reset'.")
-
 
 def main() -> None:
     if not os.getenv("GOOGLE_API_KEY"):
         print("Errore: GOOGLE_API_KEY non trovata nel file .env")
         sys.exit(1)
     try:
-        assistente = AssistenteRAG()
+        from crea_vector_db import get_o_crea_retriever
+        assistente = AssistenteRAG(retriever=get_o_crea_retriever())
         chat_loop(assistente)
     except FileNotFoundError as e:
         print(f"\nDatabase non trovato: {e}")
@@ -483,7 +413,5 @@ def main() -> None:
     except Exception as e:
         print(f"\nErrore critico: {e}")
         sys.exit(1)
-
-
 if __name__ == "__main__":
     main()
