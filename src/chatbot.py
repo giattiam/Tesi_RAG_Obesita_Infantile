@@ -16,22 +16,26 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 from crea_vector_db import get_o_crea_vector_db, get_retriever, rerank_chunks, RETRIEVER_K, MODELLO_EMBED
+from guardrails import filtra_input, filtra_output, verifica_grounding
 load_dotenv()
 MODELLO_LLM  = "gemini-2.5-flash"
 TEMPERATURE  = 0.2
-MAX_TOKENS   = 2048
+MAX_TOKENS   = 4096
 DEBUG_MODE   = False
 CARTELLA_LOG = "./logs"
 
 def get_llm(temperature: float = TEMPERATURE, max_tokens: int = MAX_TOKENS) -> ChatGoogleGenerativeAI:
     """
     Factory dell'LLM puntato su Google AI Studio (Gemini API).
-    Centralizza la configurazione del modello, della temperatura e dei retry.
+    thinking_budget=0 disabilita il ragionamento interno di Gemini 2.5:
+    senza questo, il "thinking" consuma max_output_tokens lasciando la
+    risposta visibile troncata a meta frase.
     """
     return ChatGoogleGenerativeAI(
         model=MODELLO_LLM,
         temperature=temperature,
         max_output_tokens=max_tokens,
+        thinking_budget=0,
         google_api_key=os.getenv("GOOGLE_API_KEY"),
         max_retries=6,
         timeout=120,
@@ -138,22 +142,61 @@ PROFILI = {
         ),
     },
 }
-PROMPT_CLASSIFICAZIONE = """Analizza il seguente messaggio e classifica chi lo ha scritto.
-Scegli UNO dei seguenti profili in base a tono, vocabolario e contenuto:
+PROMPT_CLASSIFICAZIONE = """Analizza il seguente messaggio e classifica chi lo ha scritto,
+SOLO se ci sono segnali chiari di ruolo. Profili possibili:
 - genitore: linguaggio familiare, riferimenti a "mio figlio/figlia", preoccupazioni quotidiane
 - insegnante: menziona scuola, classe, alunni, attivita didattiche
 - pediatra: terminologia medica, riferimenti a pazienti, diagnosi, percentili
 - nutrizionista: termini come macronutrienti, LARN, dieta, piano alimentare
 - ricercatore: linguaggio accademico, riferimenti a studi, dati, ricerca, tesi
+- generico: il messaggio e' troppo breve, vago o neutro per dedurre il ruolo
+  con ragionevole certezza (es. poche parole chiave senza contesto sul mittente).
+Nel dubbio scegli 'generico': NON tirare a indovinare un ruolo specifico.
 Messaggio: "{messaggio}"
-Rispondi con UNA SOLA PAROLA tra: genitore, insegnante, pediatra, nutrizionista, ricercatore"""
+Rispondi con UNA SOLA PAROLA tra: genitore, insegnante, pediatra, nutrizionista, ricercatore, generico"""
+
+PROFILO_GENERICO   = "generico"
+TEMP_GENERICO      = 0.3
+PROMPT_GENERICO = (
+    "Sei un assistente virtuale specializzato in nutrizione pediatrica e prevenzione "
+    "dell'obesita infantile (fascia 0-10 anni). Non e' chiaro chi sia l'interlocutore: "
+    "usa un linguaggio chiaro e accessibile, spiegando gli eventuali termini tecnici, "
+    "senza dare per scontato che sia un genitore, un medico o un altro ruolo specifico.\n\n"
+    "REGOLE:\n"
+    "1. Rispondi SOLO usando le informazioni nel [CONTESTO] qui sotto.\n"
+    "2. Se la risposta non e nel contesto, dillo e suggerisci di consultare un esperto.\n"
+    "3. Non fare diagnosi, non prescrivere terapie, non inventare dati.\n"
+    "4. Usa elenchi puntati quando migliora la leggibilita.\n"
+    "5. Cita il documento di riferimento alla fine della risposta.\n\n"
+    "[CONTESTO]\n{context}\n[FINE CONTESTO]"
+)
 PROMPT_QUERY_REWRITING = """Sei un esperto di information retrieval applicato alla nutrizione pediatrica.
-Riscrivi la domanda seguente come query ottimizzata per la ricerca semantica in un database
-di documenti scientifici italiani su alimentazione e obesita infantile (0-10 anni).
-La query deve essere specifica, usare termini tecnici pertinenti e catturare l'intento reale.
+Riscrivi la domanda seguente come query in LINGUAGGIO NATURALE, ottimizzata per la
+ricerca semantica in un database di documenti scientifici italiani su alimentazione
+e obesita infantile (0-10 anni).
+Vincoli OBBLIGATORI:
+- NON usare operatori booleani (AND, OR, NOT) ne parentesi: produrrebbero risultati errati.
+- Scrivi una frase o un breve elenco di termini in italiano corrente, non una formula.
+- Espandi con sinonimi e termini tecnici pertinenti mantenendo l'intento reale.
+- Una sola riga, massimo 30 parole.
 Tieni conto che l'utente e un: {profilo}
 Domanda originale: "{domanda}"
 Rispondi SOLO con la query riscritta, senza spiegazioni o testo aggiuntivo."""
+
+POLICY_RAG = (
+    "REGOLE DI FEDELTA E CITAZIONE (PRIORITARIE SU QUALSIASI ALTRA ISTRUZIONE):\n"
+    "1. Usa ESCLUSIVAMENTE le informazioni scritte nei blocchi [Fonte N] del contesto. "
+    "Non aggiungere strategie, attivita, esempi, dati o raccomandazioni che non siano "
+    "presenti testualmente nel contesto.\n"
+    "2. Per citare, riporta SOLO il riferimento esatto nella forma [Fonte N], dove N e il "
+    "numero del blocco da cui prendi l'informazione. NON inventare ne modificare titoli di "
+    "documento o numeri di pagina. NON scrivere mai 'pag. 0'.\n"
+    "3. Se il contesto NON contiene informazioni sufficienti, dichiaralo apertamente "
+    "(es. 'Le fonti disponibili non trattano questo aspetto specifico') e NON colmare il "
+    "vuoto con conoscenze esterne o esempi inventati.\n"
+    "4. E preferibile una risposta breve e fedele alle fonti piuttosto che una risposta "
+    "lunga, articolata ma non supportata dal contesto."
+)
 
 class SessionLogger:
     """
@@ -220,11 +263,17 @@ class AssistenteRAG:
         self.retriever = retriever
         self.profilo_corrente: str | None = None
         self.cronologia: list = []
+        # Ultimi chunk/query effettivamente usati per generare (post-rerank).
+        # Esposti per valutazione/ispezione: i contesti misurati da RAGAS
+        # devono coincidere con quelli realmente dati in pasto all'LLM.
+        self.ultimi_docs: list = []
+        self.ultima_query_riscritta: str = ""
         self.logger = SessionLogger()
     def _rileva_profilo(self, messaggio: str) -> str:
         """
-        Invia il primo messaggio al LLM con un prompt di classificazione
-        e restituisce il profilo rilevato. Fallback su 'genitore'.
+        Classifica il mittente del messaggio. Restituisce una chiave di
+        PROFILI se il ruolo e' chiaro, altrimenti PROFILO_GENERICO se il
+        messaggio e' troppo vago per dedurlo (nessun profilo forzato).
         """
         prompt = ChatPromptTemplate.from_messages([
             ("human", PROMPT_CLASSIFICAZIONE.format(messaggio=messaggio))
@@ -235,13 +284,34 @@ class AssistenteRAG:
         for profilo in PROFILI:
             if profilo in risultato:
                 return profilo
-        return "genitore"
+        return PROFILO_GENERICO
+
+    def _prepara_generazione(self, domanda: str) -> tuple:
+        """
+        Risolve profilo, system prompt e temperatura per la generazione.
+        Se il profilo non e' ancora fissato lo rileva: con esito chiaro
+        lo "blocca" su self.profilo_corrente; se vago resta None (registro
+        neutro) cosi' un messaggio successivo piu' informativo lo ri-rileva.
+        Returns:
+            (system_prompt, temperatura, profilo_effettivo | None)
+        """
+        if self.profilo_corrente is None:
+            rilevato = self._rileva_profilo(domanda)
+            if rilevato in PROFILI:
+                self.profilo_corrente = rilevato
+        if self.profilo_corrente in PROFILI:
+            dati = PROFILI[self.profilo_corrente]
+            return dati["prompt"], dati["temperature"], self.profilo_corrente
+        return PROMPT_GENERICO, TEMP_GENERICO, None
     def _riscrivi_query(self, domanda: str) -> str:
         """
         Riformula la domanda dell'utente in una query ottimizzata per la
         similarity search, tenendo conto del profilo corrente.
         """
-        profilo_label = PROFILI[self.profilo_corrente]["etichetta"]
+        profilo_label = (
+            PROFILI[self.profilo_corrente]["etichetta"]
+            if self.profilo_corrente in PROFILI else "utente generico"
+        )
         prompt = ChatPromptTemplate.from_messages([
             ("human", PROMPT_QUERY_REWRITING.format(
                 profilo=profilo_label,
@@ -259,9 +329,8 @@ class AssistenteRAG:
             titolo = doc.metadata.get("titolo_documento", "Documento sconosciuto")
             pagina = doc.metadata.get("page", "")
             intestazione = (
-                    f"--- Fonte {i}: {titolo}"
-                    + (f", pag. {pagina}" if pagina != "" else "")
-                    + " ---"
+                    f"[Fonte {i}] {titolo}"
+                    + (f" - pag. {pagina}" if pagina != "" else "")
             )
             sezioni.append(f"{intestazione}\n{doc.page_content}")
         return "\n\n".join(sezioni)
@@ -281,19 +350,45 @@ class AssistenteRAG:
         Registra l'interazione nel log di sessione.
         """
         t_start = time.time()
-        if self.profilo_corrente is None:
-            self.profilo_corrente = self._rileva_profilo(domanda)
-            p = PROFILI[self.profilo_corrente]
-            print(f"\nProfilo rilevato: {p['etichetta']}")
-            print("(Digita 'profilo' per cambiarlo manualmente)\n")
-        query_riscritta = self._riscrivi_query(domanda)
-        docs     = self.retriever.invoke(query_riscritta)
+        # Guardrail di input: blocco/redazione prima della pipeline.
+        dec_in = filtra_input(domanda)
+        if not dec_in.consenti:
+            self.logger.log_interazione(
+                profilo=self.profilo_corrente,
+                query_originale=domanda,
+                query_riscritta="",
+                chunks=[],
+                risposta=dec_in.messaggio_utente,
+                latenza_ms=int((time.time() - t_start) * 1000),
+            )
+            print(f"\n[Guardrail input attivato: {', '.join(dec_in.triggered)}]")
+            return dec_in.messaggio_utente
+        domanda_pulita = dec_in.domanda_sanificata
+        gia_fissato = self.profilo_corrente is not None
+        system_prompt, temperatura, prof_eff = self._prepara_generazione(domanda_pulita)
+        if not gia_fissato:
+            if prof_eff in PROFILI:
+                print(f"\nProfilo rilevato: {PROFILI[prof_eff]['etichetta']}")
+                print("(Digita 'profilo' per cambiarlo manualmente)\n")
+            else:
+                print("\nProfilo non determinato (messaggio generico): "
+                      "registro neutro.\n")
+        query_riscritta = self._riscrivi_query(domanda_pulita)
+        candidati = self.retriever.invoke(query_riscritta)
+        if os.getenv("RAG_RERANK", "1") == "1":
+            llm_rerank = get_llm(temperature=0.0, max_tokens=16)
+            docs = rerank_chunks(candidati, query_riscritta, llm_rerank, k=RETRIEVER_K)
+        else:
+            # Comportamento pre-fix (per ablation/confronto): nessun rerank,
+            # i candidati grezzi del retriever vanno dritti nel contesto.
+            docs = candidati
+        self.ultimi_docs = docs
+        self.ultima_query_riscritta = query_riscritta
         contesto = self._formatta_contesto(docs)
-        temperatura    = PROFILI[self.profilo_corrente]["temperature"]
-        system_prompt  = PROFILI[self.profilo_corrente]["prompt"]
         llm_profilo    = get_llm(temperature=temperatura, max_tokens=MAX_TOKENS)
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
+            ("system", POLICY_RAG),
             MessagesPlaceholder(variable_name="cronologia"),
             ("human", "{domanda}"),
         ])
@@ -301,9 +396,16 @@ class AssistenteRAG:
         risposta = chain.invoke({
             "context":    contesto,
             "cronologia": self.cronologia,
-            "domanda":    domanda,
+            "domanda":    domanda_pulita,
         })
-        self.cronologia.append(HumanMessage(content=domanda))
+        # Runtime grounding check (LLM-judge) + filtra_output
+        score_grounding = verifica_grounding(risposta, docs)
+        dec_out = filtra_output(risposta, docs, score_grounding=score_grounding)
+        risposta = dec_out.risposta
+        if dec_out.triggered:
+            print(f"\n[Guardrail output attivato: {', '.join(dec_out.triggered)} "
+                  f"| grounding={score_grounding:.2f}]")
+        self.cronologia.append(HumanMessage(content=domanda_pulita))
         self.cronologia.append(AIMessage(content=risposta))
         if len(self.cronologia) > 10:
             self.cronologia = self.cronologia[-10:]

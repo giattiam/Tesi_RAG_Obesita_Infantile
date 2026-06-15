@@ -7,6 +7,7 @@ keyword-based per migliorare la precisione su termini tecnici specifici.
 import os
 import pickle
 import re
+import hashlib
 import threading
 from functools import lru_cache
 from typing import List
@@ -45,6 +46,21 @@ def _tokenizza(testo: str) -> List[str]:
     """Tokenizzazione minima: lowercase e split su spazi/punteggiatura."""
     return re.sub(r"[^\w\s]", " ", testo.lower()).split()
 
+def _doc_id(doc: Document) -> str:
+    """
+    Id stabile per la deduplica cross-sorgente (vettoriale + BM25).
+    Hash dell'INTERO page_content: lo stesso chunk trovato da entrambe le
+    sorgenti collide e viene fuso, mentre chunk diversi che condividono il
+    prefisso (es. la stessa intestazione "[Documento: ...]" lunga > 80 char)
+    restano distinti. Sostituisce il vecchio page_content[:80], che faceva
+    collassare in un unico candidato tutti i chunk dei documenti con titolo
+    lungo (linee guida ministeriali).
+    """
+    if os.getenv("RAG_DOCID_LEGACY", "0") == "1":
+        # Comportamento pre-fix (per ablation/confronto): collide sui titoli lunghi.
+        return doc.page_content[:80]
+    return hashlib.md5(doc.page_content.encode("utf-8")).hexdigest()
+
 def _costruisci_bm25(chunks: list) -> BM25Okapi:
     """Costruisce l'indice BM25 a partire dalla lista di chunks."""
     corpus = [_tokenizza(doc.page_content) for doc in chunks]
@@ -64,6 +80,23 @@ def _carica_bm25() -> tuple:
         dati = pickle.load(f)
     return dati["indice"], dati["chunks"]
 
+def _aggiungi_intestazione(chunks: list) -> list:
+    """
+    Antepone il titolo del documento al testo di ogni chunk prima
+    dell'indicizzazione (contextual chunk header). Rende ogni chunk
+    raggiungibile per nome documento sia via BM25 (keyword match sul
+    titolo) che via similarity search (il titolo entra nell'embedding).
+    Mitiga la sotto-rappresentazione dei documenti con pochi chunk:
+    una query che nomina il documento (es. "OKkio alla salute") matcha
+    tutti i suoi chunk, non solo quelli che ne citano il nome nel testo.
+    """
+    for doc in chunks:
+        titolo = doc.metadata.get("titolo_documento", "")
+        titolo = os.path.splitext(titolo)[0].strip()
+        if titolo and not doc.page_content.startswith("[Documento:"):
+            doc.page_content = f"[Documento: {titolo}]\n{doc.page_content}"
+    return chunks
+
 def crea_vector_db(chunks: list) -> Chroma:
     """
     Crea ChromaDB e indice BM25 a partire dalla lista di chunks.
@@ -73,6 +106,7 @@ def crea_vector_db(chunks: list) -> Chroma:
     """
     if not chunks:
         raise ValueError("La lista di chunks e vuota.")
+    chunks = _aggiungi_intestazione(chunks)
     print(f"\nCreazione vector store con {len(chunks)} chunks...")
     print(f"   Modello embedding : {MODELLO_EMBED}")
     print(f"   Destinazione      : {os.path.abspath(CARTELLA_DB)}")
@@ -152,7 +186,7 @@ class RetrieverIbrido:
         punteggi_vett_inv = [1 - s for s in punteggi_vett]
         norm_vett = self._normalizza(punteggi_vett_inv)
         for (doc, _), score in zip(risultati_vett, norm_vett):
-            doc_id = doc.page_content[:80]
+            doc_id = _doc_id(doc)
             candidati[doc_id] = {
                 "doc":        doc,
                 "score_vett": score,
@@ -170,7 +204,7 @@ class RetrieverIbrido:
             norm_bm25     = self._normalizza(top_scores)
             for idx, score in zip(top_idx, norm_bm25):
                 doc    = self.chunks_bm25[idx]
-                doc_id = doc.page_content[:80]
+                doc_id = _doc_id(doc)
                 if doc_id in candidati:
                     candidati[doc_id]["score_bm25"] = score
                 else:

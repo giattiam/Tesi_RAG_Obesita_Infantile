@@ -57,10 +57,12 @@ def esegui_pipeline(campioni: list, max_domande: int | None = None) -> list:
         try:
             assistente.profilo_corrente = profilo
             assistente.cronologia       = []
-            query_riscritta = assistente._riscrivi_query(domanda)
-            docs    = retriever.invoke(query_riscritta)
-            contesti = [doc.page_content for doc in docs]
+            # rispondi() esegue la pipeline reale (retrieve + rerank + genera):
+            # i contesti misurati devono essere quelli effettivamente usati,
+            # non una retrieve separata sui candidati grezzi pre-rerank.
             risposta = assistente.rispondi(domanda)
+            query_riscritta = assistente.ultima_query_riscritta
+            contesti = [doc.page_content for doc in assistente.ultimi_docs]
             risultati.append({
                 "profilo":         profilo,
                 "user_input":      domanda,
