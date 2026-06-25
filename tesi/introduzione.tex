@@ -1,0 +1,161 @@
+% =====================================================================
+%  CAPITOLO 1 - INTRODUZIONE
+%
+%  NOTE PER LA COMPILAZIONE:
+%  - I comandi \cite{...} rimandano a voci bibliografiche da inserire e
+%    VERIFICARE in bibliografia.bib (vedi elenco in fondo al file).
+%  - La figura dell'architettura va realizzata in PowerPoint/strumento
+%    vettoriale ed esportata in PDF (linea guida relatore), poi inserita
+%    al posto del placeholder indicato.
+% =====================================================================
+
+\chapter{Introduzione}
+\label{cap:introduzione}
+
+\section{Contesto e motivazione}
+\label{sec:contesto}
+
+L'obesit\`a infantile \`e riconosciuta come una delle pi\`u rilevanti sfide di
+salute pubblica a livello globale e nazionale \cite{who_obesity}. In Italia, i
+sistemi di sorveglianza dedicati alla popolazione in et\`a scolare rilevano una
+quota significativa di bambini in condizione di eccesso ponderale, accompagnata
+da una diffusa sottostima del fenomeno da parte delle famiglie
+\cite{okkio}. La condizione, oltre alle conseguenze cliniche dirette, tende a
+persistere nell'et\`a adulta e si associa a un aumento del rischio di patologie
+croniche, rendendo la prevenzione precoce un obiettivo prioritario delle linee
+guida nazionali e internazionali \cite{linee_guida_ministero}.
+
+La prevenzione dell'obesit\`a infantile non \`e responsabilit\`a di un singolo
+attore: coinvolge i genitori nella gestione delle abitudini alimentari
+quotidiane, gli insegnanti nel contesto educativo e della ristorazione
+scolastica, e i professionisti sanitari nella valutazione e nella presa in
+carico. Ciascuno di questi interlocutori ha esigenze informative diverse per
+linguaggio, livello di dettaglio tecnico e tipo di contenuto. L'accesso a
+informazioni affidabili e contestualizzate rappresenta dunque un fattore
+abilitante per interventi di prevenzione efficaci.
+
+\section{Il problema}
+\label{sec:problema}
+
+Negli ultimi anni i modelli linguistici di grandi dimensioni
+(\emph{Large Language Models}, LLM) hanno reso possibile l'interazione in
+linguaggio naturale con grandi basi di conoscenza, offrendo un canale di
+accesso immediato e conversazionale all'informazione. Tuttavia, l'impiego
+diretto di un LLM generalista in un dominio sanitario presenta criticit\`a non
+trascurabili. In primo luogo, i modelli generativi possono produrre affermazioni
+plausibili ma prive di fondamento nelle fonti, fenomeno noto come
+\emph{allucinazione} \cite{ji_hallucination}: in un contesto in cui le risposte
+riguardano la salute di un minore, un'informazione errata o inventata pu\`o avere
+conseguenze concrete. In secondo luogo, un sistema rivolto al pubblico generale
+non deve sostituirsi al professionista sanitario, e va quindi impedito che
+formuli diagnosi, prescriva terapie o restituisca contenuti clinicamente
+inappropriati.
+
+Il paradigma \emph{Retrieval-Augmented Generation} (RAG) \cite{lewis_rag}
+affronta il primo problema vincolando la generazione a un insieme di documenti
+recuperati dinamicamente da una base di conoscenza verificata, riducendo lo
+spazio in cui il modello pu\`o produrre contenuti non fondati. Il secondo
+problema --- la sicurezza e l'appropriatezza clinica delle risposte --- richiede
+invece meccanismi di controllo dedicati, comunemente indicati come
+\emph{guardrail}, che intervengano sia sulle richieste in ingresso sia sulle
+risposte in uscita. La combinazione di questi due aspetti, unita alla necessit\`a
+di adattare la comunicazione a interlocutori eterogenei, definisce il problema
+affrontato in questa tesi.
+
+\section{Obiettivi}
+\label{sec:obiettivi}
+
+L'obiettivo del presente lavoro \`e la progettazione e la realizzazione di un
+agente conversazionale in lingua italiana che fornisca supporto informativo
+sulla prevenzione dell'obesit\`a infantile (fascia 0--10 anni) a una pluralit\`a
+di interlocutori, garantendo al contempo l'aderenza alle fonti e la sicurezza
+dei contenuti. Tale obiettivo generale si articola nei seguenti obiettivi
+specifici:
+
+\begin{itemize}
+    \item realizzare una pipeline RAG che recuperi le informazioni da un corpus
+    di linee guida e documenti scientifici italiani e che fondi le risposte
+    esclusivamente su tale corpus, con citazione esplicita delle fonti;
+    \item adattare automaticamente registro, lessico e contenuto delle risposte
+    al profilo dell'interlocutore (genitore, insegnante, pediatra,
+    nutrizionista, ricercatore);
+    \item integrare la pipeline in un'architettura di sicurezza che prevenga la
+    generazione di contenuti clinicamente inappropriati e l'uso improprio del
+    sistema;
+    \item valutare quantitativamente la qualit\`a delle risposte, la robustezza
+    dei meccanismi di sicurezza e l'efficacia dell'adattamento al profilo.
+\end{itemize}
+
+\section{Contributi}
+\label{sec:contributi}
+
+I principali contributi di questa tesi sono i seguenti:
+
+\begin{itemize}
+    \item un agente conversazionale RAG in lingua italiana per la prevenzione
+    dell'obesit\`a infantile, costruito su un corpus curato di documenti
+    istituzionali e scientifici e dotato di un meccanismo di recupero ibrido
+    che combina ricerca semantica vettoriale e ricerca lessicale;
+    \item un meccanismo di adattamento al profilo dell'interlocutore, che
+    differenzia la comunicazione su cinque categorie di stakeholder;
+    \item un'architettura di \emph{guardrail} a difesa in profondit\`a, composta
+    da controlli sull'input, verifica di ancoraggio alle fonti a tempo di
+    esecuzione e controlli sull'output, con registrazione tracciabile degli
+    interventi;
+    \item una valutazione sperimentale multi-prospettica che misura la fedelt\`a
+    e la pertinenza delle risposte (tramite la metodologia RAGAS), la robustezza
+    del livello di sicurezza (tramite una campagna di \emph{red-teaming}) e
+    l'efficacia dell'adattamento al profilo.
+\end{itemize}
+
+L'architettura complessiva del sistema, dall'ingresso della richiesta dell'utente
+fino alla restituzione della risposta, \`e illustrata in
+Figura~\ref{fig:architettura}. Come si osserva nella figura, la richiesta
+attraversa in sequenza il livello di controllo in ingresso, la pipeline RAG vera
+e propria e il livello di controllo in uscita, secondo il principio della difesa
+in profondit\`a discusso nei capitoli successivi.
+
+% ---------------------------------------------------------------------
+% FIGURA ARCHITETTURA
+% Da realizzare in PowerPoint/strumento vettoriale ed esportare in PDF
+% (linea guida relatore: niente immagini raster sgranate).
+% Salvare il file come tesi/immagini/architettura.pdf e decommentare.
+% ---------------------------------------------------------------------
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.95\textwidth]{immagini/architettura.pdf}
+%     \caption{Architettura complessiva del sistema: la richiesta dell'utente
+%     attraversa il livello di guardrail in ingresso, la pipeline RAG
+%     (rilevamento del profilo, riformulazione della query, recupero ibrido e
+%     generazione) e il livello di guardrail in uscita.}
+%     \label{fig:architettura}
+% \end{figure}
+
+\section{Struttura della tesi}
+\label{sec:struttura}
+
+Il resto della tesi \`e organizzato come segue. Il
+Capitolo~\ref{cap:background} introduce i fondamenti teorici e lo stato
+dell'arte rilevanti per il lavoro: i modelli linguistici di grandi dimensioni,
+il paradigma RAG, i meccanismi di guardrail e il dominio applicativo della
+prevenzione dell'obesit\`a infantile. Il Capitolo~\ref{cap:progettazione}
+descrive la progettazione dell'architettura del sistema e le scelte
+metodologiche adottate. Il Capitolo~\ref{cap:implementazione} dettaglia
+l'implementazione dei singoli componenti. Il Capitolo~\ref{cap:valutazione}
+presenta la metodologia e i risultati della valutazione sperimentale. Infine,
+il Capitolo~\ref{cap:conclusioni} riassume i risultati ottenuti, ne discute i
+limiti e delinea i possibili sviluppi futuri.
+
+% =====================================================================
+%  RIFERIMENTI BIBLIOGRAFICI CITATI IN QUESTO CAPITOLO (da inserire e
+%  VERIFICARE in bibliografia.bib):
+%    who_obesity            -> dati/definizioni OMS sull'obesita' infantile
+%    okkio                  -> sistema di sorveglianza OKkio alla SALUTE
+%    linee_guida_ministero  -> Linee di indirizzo Ministero della Salute
+%    ji_hallucination       -> survey sulle allucinazioni nei modelli generativi
+%    lewis_rag              -> Lewis et al., Retrieval-Augmented Generation, 2020
+%
+%  ETICHETTE DI CAPITOLO ATTESE (da definire con \label nei rispettivi file):
+%    cap:background, cap:progettazione, cap:implementazione,
+%    cap:valutazione, cap:conclusioni
+% =====================================================================

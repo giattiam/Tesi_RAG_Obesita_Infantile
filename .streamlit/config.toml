@@ -1,0 +1,10 @@
+[server]
+fileWatcherType = "none"
+runOnSave = false
+maxUploadSize = 200
+
+[runner]
+fastReruns = false
+
+[browser]
+gatherUsageStats = false

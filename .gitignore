@@ -1,8 +1,10 @@
 ### CHIAVI E SEGRETI (FONDAMENTALE) ###
 .env
+.streamlit/secrets.toml
 
 ### AMBIENTI VIRTUALI PYTHON ###
 venv/
+.venv/
 env/
 ENV/
 
@@ -11,10 +13,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-### LIBRERIE E AMBIENTI LOCALI ###
+### TEST E COVERAGE ###
 .pytest_cache/
 .coverage
 htmlcov/
+
+### LOG E OUTPUT DI RUNTIME ###
+logs/
+*.log
 
 ### INTELLIJ IDEA E PYCHARM ###
 .idea/
@@ -27,4 +33,3 @@ htmlcov/
 
 ### MAC OS ###
 .DS_Store
-.env

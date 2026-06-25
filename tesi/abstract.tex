@@ -1,0 +1,38 @@
+% =====================================================================
+%  ABSTRACT
+%  Linea guida relatore: l'abstract deve contenere (a) un breve riassunto
+%  della problematica, (b) una breve descrizione di cio' che e' stato fatto,
+%  (c) i risultati ottenuti.
+% =====================================================================
+
+L'obesit\`a infantile rappresenta uno dei principali problemi di salute
+pubblica nei paesi industrializzati e la sua prevenzione richiede che una
+pluralit\`a di attori --- genitori, insegnanti e professionisti sanitari ---
+possa accedere a informazioni affidabili, aggiornate e adeguate al proprio
+ruolo. I modelli linguistici di grandi dimensioni (LLM) offrono un canale di
+accesso conversazionale a questa conoscenza, ma in ambito sanitario il loro
+impiego diretto comporta rischi rilevanti: la generazione di informazioni non
+fondate sulle fonti (\emph{allucinazioni}) e la produzione di contenuti
+clinicamente inappropriati, come diagnosi o indicazioni terapeutiche.
+
+In questo lavoro \`e stato progettato e realizzato un agente conversazionale
+in lingua italiana basato sul paradigma \emph{Retrieval-Augmented Generation}
+(RAG) per il supporto informativo sulla prevenzione dell'obesit\`a infantile
+nella fascia 0--10 anni. Il sistema \`e alimentato da un corpus di documenti
+scientifici e linee guida italiane, adatta le risposte a cinque profili di
+interlocutore e integra la pipeline RAG in un'architettura di sicurezza
+(\emph{guardrail}) articolata su controlli di input, controlli di output e
+una verifica di ancoraggio alle fonti a tempo di esecuzione. Il recupero delle
+informazioni \`e affidato a un retriever ibrido che combina ricerca vettoriale
+e ricerca per parole chiave.
+
+La valutazione sperimentale, condotta con la metodologia RAGAS su un dataset
+costruito ad hoc, ha riportato un valore di fedelt\`a alle fonti
+(\emph{faithfulness}) pari a $0{,}934$. La robustezza del livello di sicurezza
+\`e stata misurata tramite una campagna di \emph{red-teaming}: i controlli
+deterministici bloccano il $78{,}8\%$ degli attacchi, mentre l'architettura a
+difesa in profondit\`a neutralizza la totalit\`a degli attacchi che superano
+il primo livello, senza produrre alcun output clinicamente inappropriato sui
+casi considerati. La capacit\`a di adattamento al profilo, valutata mediante
+classificazione cieca e una rubrica di appropriatezza, ha ottenuto un punteggio
+medio di $4{,}15$ su $5$.

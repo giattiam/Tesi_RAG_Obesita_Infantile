@@ -1,0 +1,28 @@
+# =============================================================
+#  DIPENDENZE PER LA SOLA VALUTAZIONE RAGAS (src/valutazione_ragas.py)
+# =============================================================
+#
+#  PERCHE' UN FILE SEPARATO:
+#  ragas 0.4.3 esige datasets >= 4.0.0, che a sua volta esige
+#  pyarrow >= 21. Ma su questo ambiente Windows pyarrow >= 24 crasha
+#  (access violation 0xc0000005) e l'app usa il pin pyarrow == 19.0.1.
+#  pip NON puo' risolvere insieme questi vincoli: l'ambiente validato
+#  e' stato ottenuto forzando pyarrow 19 DOPO l'installazione di ragas.
+#
+#  PROCEDURA DI INSTALLAZIONE (in ordine, ambiente gia' con core):
+#    pip install -r requirements.txt
+#    pip install ragas==0.4.3 datasets==4.8.5 pandas==3.0.3
+#    pip install --no-deps "pyarrow==19.0.1"
+#
+#  L'ultimo comando ri-forza la pin Windows-safe: datasets 4.8.5
+#  funziona a runtime con pyarrow 19.0.1 nonostante il vincolo
+#  dichiarato (verificato: la valutazione RAGAS gira correttamente).
+#
+#  Questo file e' a scopo documentativo: NON usare
+#  "pip install -r requirements-eval.txt" (fallirebbe il resolver).
+# =============================================================
+
+ragas==0.4.3
+datasets==4.8.5
+pandas==3.0.3
+pyarrow==19.0.1

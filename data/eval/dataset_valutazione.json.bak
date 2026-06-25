@@ -1,0 +1,152 @@
+[
+  {
+    "profilo": "genitore",
+    "domanda": "Quante volte al giorno mio figlio dovrebbe mangiare frutta e verdura?",
+    "ground_truth": "E fondamentale proporre frutta e verdura 5 volte al giorno, sia durante che fuori dai pasti, favorendo il consumo di acqua e riducendo significativamente il consumo di bibite zuccherate."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Cosa posso dare da mangiare a mio figlio per merenda al posto delle merendine?",
+    "ground_truth": "Un'ottima abitudine e includere frutta fresca in almeno uno dei due spuntini, a cui si puo aggiungere yogurt bianco, frutta secca o prodotti da forno come grissini o crackers. In alternativa si possono scegliere verdure fresche in pinzimonio, pane con olio o verdure. Altre idee sono: bruschetta al pomodoro, yogurt con cereali, pinzimonio colorato, pane e ricotta, frullato di frutta, castagne in stagione."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Mio figlio non vuole mangiare le verdure, cosa posso fare?",
+    "ground_truth": "Se il bambino non gradisce una verdura, bisogna riprovare a distanza di pochi giorni senza forzature: possono essere necessari fino a 8-10 tentativi prima che la accetti. E utile offrire un'ampia varieta, essere un buon esempio mangiando le verdure a tavola, favorire un ambiente rilassante senza TV e distrazioni, e coinvolgere il bambino nella preparazione dei pasti verso i 2 anni."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Quanta attivita fisica dovrebbe fare un bambino in eta scolare?",
+    "ground_truth": "Secondo le linee guida dell'OMS i bambini e gli adolescenti di eta compresa tra i 5 e i 17 anni dovrebbero praticare almeno 60 minuti di attivita fisica quotidiana di intensita moderata-vigorosa ed esercizi di rafforzamento dell'apparato muscolo-scheletrico almeno 3 volte a settimana. Quantita superiori a 60 minuti forniscono ulteriori benefici per la salute."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Le bevande zuccherate fanno male ai bambini?",
+    "ground_truth": "In famiglia bisogna favorire il consumo di acqua e ridurre significativamente il consumo di bibite zuccherate. L'acqua e la bevanda con cui dissetarsi e deve essere considerata come l'unica bevanda del pasto."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Come deve essere strutturata la colazione di mio figlio?",
+    "ground_truth": "La colazione e un momento essenziale della giornata. Puo essere dolce, con yogurt bianco, latte fresco o frutta secca abbinati a biscotti secchi, pane o fette biscottate integrali con confettura, corn flakes o frutta fresca di stagione. Puo anche essere salata, come pane integrale con formaggio o uova. Se il bambino fa fatica, si possono proporre colazioni diverse, iniziare gradualmente con piccole quantita nutrienti e anticipare la sveglia."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "A che eta posso iniziare lo svezzamento di mio figlio?",
+    "ground_truth": "Secondo le piu recenti raccomandazioni scientifiche internazionali, e consigliabile promuovere lo svezzamento intorno ai 5 mesi e mezzo-6 mesi di eta. Il bambino e pronto quando mantiene la posizione seduta, coordina occhio-mano-bocca per portare il cibo alla bocca e riesce a masticare e deglutire il cibo."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Quali alimenti devo evitare nel primo anno di vita di mio figlio?",
+    "ground_truth": "Nel primo anno di vita vanno evitati: il miele, che puo contenere spore di Clostridium botulinum; il latte vaccino al posto del latte materno o formulato per scarso contenuto in ferro; il te e le tisane che interferiscono con l'assorbimento del ferro; gli alimenti che comportano rischio di soffocamento come piccoli, duri, tondi e scivolosi. Vanno limitati il piu possibile sale e zucchero."
+  },
+  {
+    "profilo": "insegnante",
+    "domanda": "Come posso promuovere l'attivita fisica durante la giornata scolastica?",
+    "ground_truth": "In aggiunta all'educazione fisica curricolare, l'attivita motoria puo essere promossa attraverso le cosiddette pause attive, solitamente di 10 minuti, che permettono di contrastare i rischi legati alla sedentarieta prolungata. Tali interventi portano miglioramenti sia sulla salute sia sul profitto scolastico in termini di rendimento, capacita di attenzione e disciplina. Altre buone pratiche riguardano il percorso casa-scuola come il pedibus per la scuola primaria."
+  },
+  {
+    "profilo": "insegnante",
+    "domanda": "Quali spuntini sani posso suggerire per la merenda a scuola?",
+    "ground_truth": "Gli spuntini devono fornire energia senza essere troppo abbondanti, per evitare di interferire con l'appetito ai pasti successivi. Ottime scelte sono: frutta fresca in almeno uno dei due spuntini, yogurt bianco, frutta secca, grissini o crackers, verdure fresche in pinzimonio, pane con olio o verdure. Come eccezione occasionale si puo scegliere un pezzo di pizza, pane con marmellata o un gelato."
+  },
+  {
+    "profilo": "insegnante",
+    "domanda": "Come posso coinvolgere la scuola nella promozione di uno stile di vita sano?",
+    "ground_truth": "Gli interventi educativi dovrebbero essere progettati, realizzati e monitorati secondo un approccio condiviso tra il settore scolastico e quello sanitario, creando un team che coinvolga dirigenti, docenti, operatori sanitari, esperti in scienze motorie e operatori sportivi. La scuola assume il ruolo di setting privilegiato per dotare i giovani di una cultura favorevole alla salute. Questo approccio, definito approccio scolastico globale o sistemico, mira a risultati duraturi e dovrebbe essere attivato precocemente fin dalla scuola dell'infanzia."
+  },
+  {
+    "profilo": "insegnante",
+    "domanda": "Quali attivita motorie sono indicate per i bambini della scuola primaria?",
+    "ground_truth": "Durante l'infanzia tra i 6 e gli 11 anni continua la costruzione dei prerequisiti funzionali dell'apprendimento motorio. E indispensabile un adeguato svolgimento dell'attivita fisica per affinare e arricchire i vari schemi motori. In questa eta l'esercizio basato su forze di impatto come i balzi rappresenta uno strumento importante per la prevenzione precoce dell'osteoporosi. Sono rilevanti progetti come Joy of Moving e i progetti Sport di classe per la primaria."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Qual e la prevalenza del sovrappeso nei bambini delle scuole primarie in Emilia-Romagna?",
+    "ground_truth": "I dati OKkio alla Salute 2014 in Emilia-Romagna mostrano che tra gli alunni della scuola primaria 1 bambino su 3, pari al 30%, si trova in una condizione di eccesso di peso. Quasi 1 genitore su 2, pari al 45%, non percepisce che il proprio bambino e in sovrappeso."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Qual e il ruolo del pediatra nella promozione dell'attivita fisica?",
+    "ground_truth": "Il pediatra tramite i controlli periodici puo valutare le condizioni di salute psicofisica del bambino prima di cominciare una pratica di esercizio fisico e monitorarle nel tempo. Attraverso le competenze di counselling puo sensibilizzare, motivare e sostenere la famiglia sui vantaggi dell'attivita fisica regolare, informare sulle opportunita di praticare attivita fisica e indicare professionisti e strutture qualificate. L'obiettivo e un apprendimento legato al divertimento e al benessere favorendo momenti di condivisione familiare."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Quali sono le abitudini alimentari scorrette piu diffuse nei bambini delle scuole primarie?",
+    "ground_truth": "Secondo i dati OKkio alla Salute in Emilia-Romagna, poco piu di 3 bambini su 5 pari al 63% fanno una colazione sana, mentre quasi 3 bambini su 5 pari al 55% fanno una merenda corretta e leggera a meta mattina. Un bambino su 10 pari al 10% non fa attivita fisica sufficiente per la sua eta. Quasi 1 bambino su 3 pari al 31% trascorre piu di 2 ore al giorno davanti alla TV o giocando con i videogiochi."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Come si struttura correttamente un pasto per un bambino in eta scolare?",
+    "ground_truth": "Un pasto bilanciato include alimenti che forniscono i macronutrienti carboidrati, proteine e grassi e la verdura come fonte di fibra, vitamine e sali minerali. Gli alimenti possono essere divisi in primo e secondo con contorno di verdure oppure riuniti in un piatto unico. La composizione ideale prevede meta piatto di ortaggi e frutta, un quarto di cereali e un quarto di proteine, con acqua come bevanda e olio extravergine di oliva come condimento."
+  },
+  {
+    "profilo": "nutrizionista",
+    "domanda": "Qual e la frequenza settimanale raccomandata per le diverse fonti proteiche nei bambini tra 2 e 10 anni?",
+    "ground_truth": "Per garantire una dieta varia ed equilibrata la frequenza settimanale suggerita per il secondo piatto nei bambini tra 2 e 10 anni e: legumi 3-4 volte a settimana, pesce 3-4 volte a settimana preferendo pesce azzurro e di piccola taglia, carne 2-3 volte a settimana privilegiando carni bianche, uova 1-2 volte a settimana, formaggi 1-2 volte a settimana, salumi e carni trasformate massimo 1 volta a settimana come eccezione."
+  },
+  {
+    "profilo": "nutrizionista",
+    "domanda": "Quali sono le porzioni orientative di pasta e carne per un bambino tra 1 e 2 anni?",
+    "ground_truth": "Le porzioni orientative per i bambini da 1 a 2 anni sono: pasta riso farina di mais e cous cous 35-40 g a crudo, carni magre rosse e bianche 25-30 g, carni stagionate come prosciutto e bresaola 15-20 g. Per i bambini da 6 a 12 mesi le porzioni sono inferiori: pasta 20-30 g e carni magre 15-20 g."
+  },
+  {
+    "profilo": "nutrizionista",
+    "domanda": "Come si compone correttamente il piatto unico per un bambino?",
+    "ground_truth": "Il piatto unico e un'ottima alternativa nutrizionale al classico primo e secondo piatto e deve essere sempre accompagnato da un contorno di verdure, pane e frutta. Le combinazioni corrette sono: cereali con legumi come pasta e ceci o polenta con fagioli, cereali con pesce, cereali con carne, cereali con uovo, cereali con formaggio. La composizione visiva ideale prevede meta piatto di ortaggi e frutta, un quarto di cereali e un quarto di proteine."
+  },
+  {
+    "profilo": "ricercatore",
+    "domanda": "Quali sono i principali comportamenti a rischio per il sovrappeso infantile rilevati da OKkio alla Salute?",
+    "ground_truth": "I dati OKkio alla Salute 2014 in Emilia-Romagna evidenziano che il 30% dei bambini della scuola primaria e in eccesso di peso. I comportamenti a rischio rilevati includono: colazione non adeguata nel 37% dei bambini, merenda non corretta nel 45% dei casi, attivita fisica insufficiente nel 10% dei bambini, utilizzo di TV o videogiochi per piu di 2 ore al giorno nel 31% dei casi. Il 45% dei genitori non percepisce che il proprio figlio e in sovrappeso, evidenziando un problema di consapevolezza familiare."
+  },
+  {
+    "profilo": "ricercatore",
+    "domanda": "Qual e l'approccio raccomandato per l'alimentazione complementare responsiva secondo le linee guida italiane?",
+    "ground_truth": "L'alimentazione complementare responsiva e un approccio che rispetta i tempi e i segnali del bambino. I principi fondamentali sono: iniziare quando il bambino appare interessato al cibo e si mostra pronto intorno ai 6 mesi, rispettare i segnali di fame e sazietà senza forzature, applicare il principio di divisione di responsabilita alimentare in cui i genitori decidono cosa dove e quando offrire mentre il bambino decide se e quanto mangiare, evitare distrazioni durante il pasto e favorire la partecipazione ai pasti familiari. Possono essere necessari fino a 10-15 assaggi ripetuti prima che il bambino accetti un nuovo alimento."
+  },
+  {
+    "profilo": "ricercatore",
+    "domanda": "Quali interventi sono raccomandati a livello scolastico per la promozione dell'attivita fisica secondo le linee di indirizzo italiane?",
+    "ground_truth": "Le linee di indirizzo raccomandano un approccio scolastico globale o sistemico progettato in raccordo tra settore scolastico e sanitario con un team dedicato. Gli interventi includono: pause attive di circa 10 minuti che migliorano salute e profitto scolastico, mobilita attiva casa-scuola tramite pedibus per la primaria e bicibus per la secondaria, progetti come Joy of Moving e Sport di classe per la primaria. E importante assecondare la tendenza dei bambini a muoversi attraverso giochi di movimento e favorire l'inclusione degli alunni disabili."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Quali sono i criteri diagnostici per definire sovrappeso e obesita' in eta' evolutiva?",
+    "ground_truth": "In eta' evolutiva e' impossibile utilizzare valori standard per definire sovrappeso e obesita'. Nella pratica clinica e' necessario fare riferimento alle curve dei centili del BMI. Un bambino e' considerato in sovrappeso quando il BMI si colloca tra l'85° e il 95° centile, e obeso quando supera il 95° centile per eta' e sesso."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Quando e' indicata la terapia farmacologica nel trattamento dell'obesita' pediatrica?",
+    "ground_truth": "La modifica dello stile di vita rimane il cardine per la gestione del peso nei bambini e adolescenti obesi. Per coloro che non sono in grado di raggiungere una perdita di peso clinicamente significativa con i soli interventi sullo stile di vita, l'uso combinato di trattamenti piu' intensivi che includano la terapia farmacologica puo' essere preso in considerazione soprattutto in presenza di comorbidita' come dislipidemia, ipertensione, insulino-resistenza, steatosi epatica e apnea ostruttiva del sonno."
+  },
+  {
+    "profilo": "ricercatore",
+    "domanda": "Quali livelli di prova supportano l'intervento dietetico nell'obesita' pediatrica secondo le linee guida SIEDP?",
+    "ground_truth": "Secondo le linee guida SIEDP, si raccomanda che i bambini dopo i 2 anni di vita seguano un'alimentazione a bassa densita' calorica basata sui principi della dieta mediterranea, con almeno 5 porzioni tra frutta, verdura e ortaggi, privilegiando le fonti vegetali di proteine e ripartita in circa 5 pasti giornalieri, con livello di prova V e forza della raccomandazione A. L'efficacia sulla riduzione del BMI z-score di programmi basati su alimentazione e stile di vita e' stata dimostrata solo nel breve termine di 6-12 mesi."
+  },
+  {
+    "profilo": "ricercatore",
+    "domanda": "Quali risultati hanno ottenuto gli studi italiani sul trattamento dell'obesita' infantile?",
+    "ground_truth": "Gli unici studi italiani basati su educazione alimentare, strategie cognitive o cognitivo-comportamentali e coinvolgimento della famiglia hanno riportato rispettivamente una riduzione del BMI z-score di 0,44 dopo tre anni e una riduzione del BMI z-score di 1,49, con modifica dei comportamenti disfunzionali e miglioramento degli aspetti sociali ed emotivi dopo 5 anni di follow up."
+  },
+  {
+    "profilo": "pediatra",
+    "domanda": "Quali complicanze psicosociali sono associate all'obesita' infantile?",
+    "ground_truth": "I bambini obesi sono frequentemente esclusi dalle attivita' motorie competitive e subiscono un considerevole stress psicologico. L'obesita' puo' minare l'autostima e condurre alla costruzione di un'immagine corporea negativa. Esiste una correlazione tra obesita' e bullismo: i ragazzi obesi tra gli 11 e i 16 anni sono piu' frequentemente vittime di bullismo verbale e fisico. L'insoddisfazione per l'immagine corporea associata all'obesita' puo' essere correlata all'aumento di prevalenza di disturbi dell'alimentazione come bulimia nervosa e binge eating disorder."
+  },
+  {
+    "profilo": "nutrizionista",
+    "domanda": "Quali sono le raccomandazioni dietetiche per bambini obesi secondo il Consensus SIEDP?",
+    "ground_truth": "Si raccomanda che i bambini dopo i 2 anni seguano un'alimentazione a bassa densita' calorica basata sui principi della dieta mediterranea con almeno 5 porzioni tra frutta, verdura e ortaggi, privilegiando le fonti vegetali di proteine e ripartita in circa 5 pasti giornalieri. Il consumo di bevande zuccherate e' associato a un aumento di peso per il contenuto in zucchero, il ridotto senso di sazietà e l'incompleta riduzione compensatoria dell'assunzione energetica ai pasti successivi. L'uso di pasti sostitutivi non e' raccomandato."
+  },
+  {
+    "profilo": "genitore",
+    "domanda": "Cosa sono i primi 1000 giorni e perche' sono importanti per prevenire l'obesita'?",
+    "ground_truth": "I primi 1000 giorni di vita, dal concepimento ai due anni, rappresentano un periodo critico in cui l'alimentazione puo' avere effetti a lungo termine sulla salute futura. Un'alimentazione errata o problematiche metaboliche durante la gravidanza o i primi 2 anni di vita possono favorire l'iperplasia della cellula adipocitaria e attivare meccanismi epigenetici responsabili dell'aumento del peso. I bambini nutriti con una dieta che preveda proteine in eccesso nei primi mille giorni presentano modificazioni epigenetiche che li predispongono a sviluppare obesita' e patologie metaboliche."
+  },
+  {
+    "profilo": "insegnante",
+    "domanda": "Quali strategie intersettoriali sono raccomandate per la prevenzione dell'obesita' infantile a scuola?",
+    "ground_truth": "Le azioni di prevenzione devono essere multicomponenti e basate su alleanze tra Aziende Sanitarie e partner locali come Comuni, scuole, associazioni sportive, produttori alimentari e ditte di ristorazione. Gli interventi educativi dovrebbero essere progettati secondo un approccio scolastico globale condiviso tra settore scolastico e sanitario, coinvolgendo dirigenti, docenti, operatori sanitari, esperti in scienze motorie e operatori sportivi. L'educazione deve incentivare il consumo di 5 porzioni al giorno di frutta e verdura e insegnare a bere acqua per soddisfare la sete."
+  }
+]

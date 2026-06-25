@@ -1,6 +1,42 @@
-langchain
-langchain-community
-langchain-google-genai
-pypdf
-chromadb
-python-dotenv
+# =============================================================
+#  Tesi RAG - Obesita Infantile - DIPENDENZE RUNTIME (core)
+#  Python 3.12 - testato su Windows 11.
+#  Installa ed esegue il chatbot (CLI + web) e la creazione indice.
+#  Installazione:  pip install -r requirements.txt
+#
+#  NOTA: la valutazione RAGAS ha dipendenze separate e in conflitto
+#  con il pin pyarrow Windows-safe -> vedi requirements-eval.txt.
+# =============================================================
+
+# --- LangChain core ---
+langchain==1.3.0
+langchain-core==1.4.0
+langchain-community==0.4.1
+langchain-text-splitters==1.1.2
+langchain-experimental==0.4.1
+
+# --- LLM (Google AI Studio / Gemini) ---
+langchain-google-genai==4.2.2
+
+# --- Embeddings e retrieval ibrido ---
+langchain-huggingface==1.2.2
+sentence-transformers==5.5.0
+langchain-chroma==1.1.0
+chromadb==1.5.9
+rank-bm25==0.2.2
+
+# --- Caricamento documenti ---
+pypdf==6.11.0
+
+# --- Interfaccia web ---
+streamlit==1.57.0
+
+# --- Utilita ---
+python-dotenv==1.2.2
+
+# pyarrow >= 24 crasha su Windows con access violation (0xc0000005):
+# il pin a 19.0.1 e OBBLIGATORIO per l'app, non rimuovere.
+pyarrow==19.0.1
+
+# --- Test ---
+pytest==9.0.3
