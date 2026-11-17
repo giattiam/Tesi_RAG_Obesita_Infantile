@@ -8,6 +8,10 @@ Espone due funzioni pure (no side-effect sul resto del sistema):
 
 Controlli implementati:
   INPUT (blocco o redazione)
+    0. Crisi / emergenza (autolesionismo-suicidio, disturbo alimentare,
+       abuso-maltrattamento) -> priorita' massima: non risponde nel merito ma
+       offre ascolto empatico e numeri di emergenza verificati. Il payload
+       NON viene loggato in chiaro (dato sensibile).
     1. Prompt injection / jailbreak / esfiltrazione del system prompt
     2. Richiesta di diagnosi personalizzata su un bambino specifico
     3. Richiesta di prescrizione, dosaggio o terapia farmacologica
@@ -29,6 +33,42 @@ from dataclasses import dataclass, field, asdict
 CARTELLA_LOG = "./logs"
 
 # === PATTERN DI INPUT ============================================
+
+# --- CRISI / EMERGENZA (priorita' massima) -----------------------
+# Segnali espliciti di disagio grave. Volutamente conservativi: puntano a
+# espressioni dirette, accettando qualche falso negativo (linguaggio implicito
+# o metaforico non coperto) in cambio di pochissimi falsi positivi. E' una rete
+# di sicurezza deterministica, NON uno strumento di screening clinico.
+_CRISIS_PATTERNS = {
+    "autolesionismo_suicidio": [
+        r"\b(mi\s+(voglio|vorrei|vorre[i]?)\s+)?(uccider|ammazzar)(mi|e)\b",
+        r"\bsuicid",
+        r"\bfarla\s+finita\b",
+        r"\bnon\s+(voglio|ho\s+voglia\s+di)\s+(più|piu')\s+vivere\b",
+        r"\b(farmi|farsi|fargli|farle)\s+del\s+male\b",
+        r"\bautoles",
+        r"\btagliar(mi|si|gli|le)\b",
+        r"\bvoglio\s+morire\b",
+        r"\bmeglio\s+morir",
+    ],
+    "disturbo_alimentare": [
+        r"\b(mi\s+|si\s+)?(faccio|fa|fanno)\s+vomitar",
+        r"\bvomit\w*\s+(dopo|per\s+non\s+ingrassar|di\s+nascosto)",
+        r"\bnon\s+(mangi[ao]|mangia|mangiano)\s+(più|piu'|da\s+giorni|niente|nulla)\b",
+        r"\banoress|bulimi",
+        r"\bdigiun\w*\s+(da|per|totale)\b",
+        r"\bsmett(o|e|ere)\s+di\s+mangiare\b",
+        r"\bpaura\s+di\s+(ingrassare|mangiare)\b",
+        r"\bmi\s+sento\s+grass[oa]\b",
+        r"\bsalt(o|a|are)\s+(sempre\s+)?i\s+past",
+    ],
+    "abuso_maltrattamento": [
+        r"\b(mi|lo|la|ci)\s+picchi\w+\b",
+        r"\babus\w+\s+(su|sessual|sui)",
+        r"\bmaltratt",
+        r"\bviolenz\w*\s+(su|sui|sessual|domestic)",
+    ],
+}
 
 _INJECTION_PATTERNS = [
     r"\bignora(re)?\s+(le|l[ae])?\s*(istruzion|regole|policy|tutte)",
@@ -127,6 +167,47 @@ _CONVERSATIONAL_OPENINGS = {
 
 # === MESSAGGI DI RIFIUTO =========================================
 
+# Numeri di emergenza italiani verificati (nov. 2025). In caso di messa in
+# produzione ri-verificare periodicamente su fonti ufficiali.
+_FOOTER_EMERGENZA = (
+    "\n\n**Se tu o un bambino siete in pericolo immediato, chiama subito il "
+    "112.** Parlarne con il pediatra o con una persona di fiducia e' un primo "
+    "passo importante."
+)
+
+_MSG_CRISI = {
+    "autolesionismo_suicidio": (
+        "Mi dispiace molto che tu stia affrontando un momento cosi' difficile. "
+        "Non sono la figura adatta ad aiutarti su questo, ma ci sono persone "
+        "qualificate pronte ad ascoltarti subito, in modo gratuito e "
+        "riservato:\n\n"
+        "- **Telefono Amico Italia** (prevenzione del disagio): 02 2327 2327\n"
+        "- **Telefono Azzurro** (bambini e ragazzi): 19696\n"
+        "- **Emergenza sanitaria**: 112"
+        + _FOOTER_EMERGENZA
+    ),
+    "disturbo_alimentare": (
+        "Grazie per aver condiviso qualcosa di cosi' delicato. I disturbi del "
+        "comportamento alimentare vanno affrontati con l'aiuto di professionisti: "
+        "non posso sostituirli, ma posso indicarti chi puo' aiutarti subito, "
+        "gratuitamente e in modo riservato:\n\n"
+        "- **SOS Disturbi Alimentari** (numero verde): 800 180 969\n"
+        "- **Telefono Azzurro** (bambini e ragazzi): 19696\n"
+        "- il tuo **pediatra** o **medico di famiglia**, che puo' indirizzarti "
+        "al centro specializzato piu' vicino"
+        + _FOOTER_EMERGENZA
+    ),
+    "abuso_maltrattamento": (
+        "Mi dispiace che tu stia vivendo questa situazione. La sicurezza di un "
+        "bambino viene prima di tutto: ci sono servizi dedicati pronti ad "
+        "ascoltarti e intervenire, gratuitamente e in modo riservato:\n\n"
+        "- **Emergenza Infanzia** (minori in pericolo, attivo 24h): 114\n"
+        "- **Telefono Azzurro** (ascolto): 19696\n"
+        "- **Emergenza**: 112"
+        + _FOOTER_EMERGENZA
+    ),
+}
+
 _MSG_INJECTION = (
     "Non posso rispondere a questa richiesta. Posso aiutarti con domande "
     "sulla nutrizione e sulla prevenzione dell'obesita' infantile basate "
@@ -178,6 +259,13 @@ class OutputDecision:
 def _hit(patterns, testo: str) -> bool:
     return any(re.search(p, testo, re.IGNORECASE) for p in patterns)
 
+def _crisis_category(testo: str) -> str | None:
+    """Ritorna la categoria di crisi rilevata (la prima che scatta) o None."""
+    for categoria, patterns in _CRISIS_PATTERNS.items():
+        if _hit(patterns, testo):
+            return categoria
+    return None
+
 def _is_injection(testo: str) -> bool:
     return _hit(_INJECTION_PATTERNS, testo)
 
@@ -223,6 +311,19 @@ def filtra_input(domanda: str) -> InputDecision:
     """Applica i 5 controlli di input nell'ordine di severita'.
     Restituisce InputDecision; logga sempre i trigger su file."""
     triggered: list = []
+
+    # Controllo 0: crisi / emergenza. Ha priorita' su tutto il resto perche'
+    # una persona in difficolta' non deve mai ricevere un rifiuto freddo o il
+    # messaggio "fuori tema". Il testo grezzo NON viene loggato: e' sensibile.
+    categoria_crisi = _crisis_category(domanda)
+    if categoria_crisi:
+        triggered.append(f"crisi:{categoria_crisi}")
+        dec = InputDecision(False, domanda, _MSG_CRISI[categoria_crisi], triggered)
+        # Logga una decisione "oscurata": ne' il payload ne' domanda_sanificata
+        # (che qui conterrebbe il testo grezzo) devono finire nell'audit log.
+        dec_log = InputDecision(False, "[REDACTED_CRISIS]", None, triggered)
+        _log_trigger("input", dec_log, "[REDACTED_CRISIS]")
+        return dec
 
     if _is_injection(domanda):
         triggered.append("prompt_injection")
@@ -350,6 +451,9 @@ def verifica_grounding(risposta: str, chunks: list) -> float:
         llm = get_llm(temperature=0.0, max_tokens=64)
         out = llm.invoke(prompt_testo)
         testo = getattr(out, "content", str(out)).strip()
+        # normalizza la virgola decimale italiana (es. "0,85" -> "0.85"):
+        # senza questo il match fallirebbe o leggerebbe solo "0".
+        testo = testo.replace(",", ".")
         m = re.search(r"\b([01](?:\.\d+)?|0?\.\d+)\b", testo)
         if not m:
             return 1.0
@@ -414,6 +518,11 @@ def _log_path() -> str:
     return _LOG_FILE
 
 def _log_trigger(tipo: str, decisione, payload_extra) -> None:
+    # Disabilitabile via env (GUARDRAIL_LOG=0) per non inquinare l'audit log
+    # durante test e valutazioni (es. red-team che chiama filtra_input decine
+    # di volte). Di default il logging e' attivo per l'app reale.
+    if os.getenv("GUARDRAIL_LOG", "1") != "1":
+        return
     try:
         with open(_log_path(), "a", encoding="utf-8") as f:
             record = {

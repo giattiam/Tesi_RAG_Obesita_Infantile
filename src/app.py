@@ -28,21 +28,21 @@ import logging
 logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 st.set_page_config(
-    page_title="RAG-Obesita",
-    page_icon="R",
+    page_title="Crescere Bene",
+    page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 st.markdown("""
 <style>
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; }
 html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 /* === Sfondo principale === */
-.stApp { background: #ffffff; }
+.stApp { background: #FAF8F4; }
 .main .block-container {
     padding-top: 1rem !important;
     padding-bottom: 1rem !important;
@@ -50,130 +50,141 @@ html, body, [class*="css"] {
 }
 /* === Sidebar === */
 [data-testid="stSidebar"] {
-    background: #f7f8fa;
-    border-right: 1px solid #e7e9ee;
+    background: #F2EEE6;
+    border-right: 1px solid #E7E1D5;
 }
 [data-testid="stSidebar"] > div:first-child { padding-top: 0.5rem; }
 /* Logo sidebar */
 .brand-row {
     display: flex; align-items: center; gap: 0.7rem;
     padding: 0.5rem 0.2rem 1rem 0.2rem;
-    border-bottom: 1px solid #e7e9ee;
+    border-bottom: 1px solid #E7E1D5;
     margin-bottom: 1rem;
 }
 .brand-logo {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    background: #2151ff;
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    background: #4A8C83;
     color: #fff;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 1rem;
+    font-family: 'Fraunces', serif;
+    font-weight: 700; font-size: 0.92rem; letter-spacing: 0.02em;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(74,140,131,.4);
 }
 .brand-title {
-    font-size: 0.92rem; font-weight: 700; color: #0f172a; line-height: 1.1;
+    font-family: 'Fraunces', serif;
+    font-size: 1rem; font-weight: 700; color: #2e2723; line-height: 1.1;
 }
 .brand-sub {
-    font-size: 0.72rem; color: #6b7280; font-weight: 500;
+    font-size: 0.72rem; color: #9a8c7f; font-weight: 500;
 }
 /* "Nuova chat" button: protagonista */
 [data-testid="stSidebar"] .stButton:first-of-type > button {
-    background: #2151ff !important;
+    background: #4A8C83 !important;
     color: #ffffff !important;
     border: none !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     font-weight: 600 !important;
     padding: 0.6rem 1rem !important;
     font-size: 0.88rem !important;
     width: 100% !important;
+    box-shadow: 0 4px 12px rgba(74,140,131,.4) !important;
 }
 [data-testid="stSidebar"] .stButton:first-of-type > button:hover {
-    background: #1a3fd0 !important;
+    background: #3d7368 !important;
 }
-/* Bottoni "secondari" della cronologia: stile lista */
+/* Bottoni "secondari" della cronologia: stile lista (spec HTML Crescere Bene) */
 [data-testid="stSidebar"] .stButton > button {
     background: transparent !important;
-    color: #1f2937 !important;
+    color: #6b615a !important;
     border: 1px solid transparent !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     text-align: left !important;
-    font-weight: 500 !important;
-    font-size: 0.85rem !important;
-    padding: 0.4rem 0.6rem !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    padding: 9px 12px !important;
     width: 100% !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 [data-testid="stSidebar"] .stButton > button:hover {
-    background: #ececf0 !important;
+    background: rgba(46,39,35,.06) !important;
+    color: #2e2723 !important;
 }
 /* Sezione label sidebar */
 .sb-label {
-    font-size: 0.7rem; font-weight: 600;
-    color: #6b7280; text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.6rem 0.4rem 0.3rem 0.4rem;
+    font-size: 11px; font-weight: 700;
+    color: #a99c8f; text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 22px 8px 8px 8px;
 }
 /* Search box */
 [data-testid="stSidebar"] .stTextInput > div > div {
     background: #ffffff !important;
-    border: 1px solid #e0e2e8 !important;
+    border: 1px solid #E7E1D5 !important;
     border-radius: 999px !important;
 }
 [data-testid="stSidebar"] .stTextInput input {
     font-size: 0.82rem !important;
     padding: 0.45rem 0.8rem !important;
+    color: #2e2723 !important;
 }
 /* User card in fondo alla sidebar */
 .user-card {
     display: flex; align-items: center; gap: 0.6rem;
     padding: 0.6rem 0.5rem;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #ffffff;
-    border: 1px solid #e0e2e8;
+    border: 1px solid #E7E1D5;
     margin-top: 1rem;
 }
 .user-avatar {
     width: 30px; height: 30px;
-    background: #e5e7eb;
-    color: #374151;
+    background: #EAF1EF;
+    color: #4A8C83;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 600; font-size: 0.78rem;
+    font-weight: 700; font-size: 0.78rem;
     flex-shrink: 0;
 }
-.user-name { font-size: 0.85rem; font-weight: 600; color: #0f172a; line-height: 1.1; }
-.user-role { font-size: 0.72rem; color: #6b7280; }
+.user-name { font-size: 0.85rem; font-weight: 700; color: #2e2723; line-height: 1.1; }
+.user-role { font-size: 0.72rem; color: #9a8c7f; }
 /* === Header conversazione === */
 .conv-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 0.6rem 0;
-    border-bottom: 1px solid #eef0f3;
+    border-bottom: 1px solid #ECE5D6;
     margin-bottom: 1.5rem;
 }
-.conv-title { font-size: 0.95rem; font-weight: 600; color: #0f172a; }
+.conv-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem; font-weight: 600; color: #2e2723;
+}
 /* === Welcome card === */
 .welcome-wrap {
     text-align: center;
     padding: 5rem 1rem 1rem 1rem;
 }
 .welcome-title {
-    font-size: 2rem; font-weight: 700; color: #0f172a;
+    font-family: 'Fraunces', serif;
+    font-size: 2.1rem; font-weight: 400; color: #2a2a28;
+    letter-spacing: 0.2px;
     margin-bottom: 0.8rem;
 }
 .welcome-sub {
-    font-size: 0.95rem; color: #6b7280; line-height: 1.55;
+    font-size: 0.95rem; color: #6b615a; line-height: 1.55;
     max-width: 640px; margin: 0 auto;
 }
 .welcome-disclaimer {
     display: inline-flex; align-items: center; gap: 0.4rem;
     margin-top: 2rem;
     padding: 0.45rem 1rem;
-    background: #f7f8fa;
-    border: 1px dashed #cbd5e1;
+    background: #fcefd9;
+    border: 1px solid #f0d49b;
     border-radius: 999px;
-    font-size: 0.78rem; color: #64748b;
+    font-size: 0.78rem; color: #8a6d2a;
 }
 /* === Bolle messaggi === */
 .msg-row {
@@ -185,14 +196,14 @@ html, body, [class*="css"] {
     justify-content: flex-end;
 }
 .msg-user-bubble {
-    background: #2151ff;
-    color: #ffffff;
+    background: #efe9dd;
+    color: #39342b;
     padding: 0.7rem 1rem;
-    border-radius: 16px 16px 4px 16px;
+    border: 1px solid #e7e0d0;
+    border-radius: 18px 18px 6px 18px;
     max-width: 75%;
     font-size: 0.92rem;
     line-height: 1.55;
-    box-shadow: 0 2px 8px rgba(33,81,255,0.18);
 }
 .msg-assistant {
     justify-content: flex-start;
@@ -201,47 +212,48 @@ html, body, [class*="css"] {
 }
 .msg-avatar-ai {
     width: 32px; height: 32px;
-    border-radius: 8px;
-    background: #2151ff;
-    color: #fff;
+    border-radius: 10px;
+    background: #EAF1EF;
+    color: #4A8C83;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.72rem;
+    font-family: 'Fraunces', serif;
+    font-weight: 700; font-size: 0.72rem; letter-spacing: 0.02em;
     flex-shrink: 0;
 }
 .msg-assistant-bubble {
-    background: #f7f8fa;
-    color: #0f172a;
+    background: #ffffff;
+    color: #2e2723;
     padding: 0.85rem 1.1rem;
-    border-radius: 4px 16px 16px 16px;
+    border-radius: 6px 18px 18px 18px;
     max-width: 75%;
     font-size: 0.92rem;
     line-height: 1.65;
-    border: 1px solid #eef0f3;
+    border: 1px solid #ECE5D6;
 }
 /* === Footer disclaimer === */
 .bottom-disclaimer {
     text-align: center;
     font-size: 0.74rem;
-    color: #94a3b8;
+    color: #a99c8f;
     padding: 0.5rem 0 0.2rem 0;
 }
 /* === Pannello fonti === */
 .fonti-box {
-    background: #f7f8fa;
-    border: 1px solid #e0e2e8;
-    border-radius: 10px;
+    background: #ffffff;
+    border: 1px solid #E7E1D5;
+    border-radius: 12px;
     padding: 0.9rem 1rem;
     margin-bottom: 0.7rem;
 }
 .fonti-title {
-    font-size: 0.78rem; font-weight: 700; color: #0f172a;
+    font-size: 0.78rem; font-weight: 700; color: #2e2723;
     margin-bottom: 0.3rem;
 }
 .fonti-snippet {
-    font-size: 0.8rem; color: #475569; line-height: 1.5;
+    font-size: 0.8rem; color: #6b615a; line-height: 1.5;
 }
 .fonti-meta {
-    font-size: 0.72rem; color: #94a3b8;
+    font-size: 0.72rem; color: #a99c8f;
     margin-top: 0.35rem;
 }
 /* Nasconde solo gli elementi superflui. NON tocchiamo header/toolbar:
@@ -258,20 +270,32 @@ header[data-testid="stHeader"] { background: transparent !important; }
     pointer-events: auto !important;
     z-index: 1000 !important;
 }
+/* Barra inferiore: rimuove lo sfondo bianco di default (blocco bianco) */
+[data-testid="stBottom"],
+[data-testid="stBottomBlockContainer"] {
+    background: #FAF8F4 !important;
+}
+[data-testid="stBottom"] > div { background: transparent !important; }
 /* Chat input */
 [data-testid="stChatInput"] {
-    border-radius: 14px !important;
-    border: 1px solid #e0e2e8 !important;
+    border-radius: 16px !important;
+    border: 1px solid #E7E1D5 !important;
     background: #ffffff !important;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.04) !important;
+    box-shadow: 0 8px 22px -12px rgba(46,39,35,.35) !important;
     max-width: 760px !important;
     margin: 0 auto !important;
 }
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInputTextArea"] {
+    background: #ffffff !important;
+}
+[data-testid="stChatInputTextArea"] { color: #2e2723 !important; }
+[data-testid="stChatInput"] button { color: #4A8C83 !important; }
 /* Profilo selectbox sidebar */
 [data-testid="stSidebar"] .stSelectbox > div > div {
     background: #ffffff !important;
-    border: 1px solid #e0e2e8 !important;
-    border-radius: 8px !important;
+    border: 1px solid #E7E1D5 !important;
+    border-radius: 10px !important;
     font-size: 0.82rem !important;
 }
 /* === Markdown dentro la bolla assistente === */
@@ -286,37 +310,36 @@ header[data-testid="stHeader"] { background: transparent !important; }
     font-size: 0.98rem; font-weight: 700; margin: 0.5rem 0 0.3rem;
 }
 .msg-assistant-bubble code {
-    background: #eef0f3; padding: 0.1rem 0.3rem;
+    background: #F2EEE6; padding: 0.1rem 0.3rem;
     border-radius: 4px; font-size: 0.85em;
 }
 .msg-assistant-bubble pre {
-    background: #eef0f3; padding: 0.6rem 0.8rem;
-    border-radius: 8px; overflow-x: auto; font-size: 0.82em;
+    background: #F2EEE6; padding: 0.6rem 0.8rem;
+    border-radius: 10px; overflow-x: auto; font-size: 0.82em;
 }
 .msg-assistant-bubble strong { font-weight: 700; }
-.msg-assistant-bubble a { color: #2151ff; }
+.msg-assistant-bubble a { color: #4A8C83; }
 /* === Chip guardrail sopra la card === */
 .guardrail-chip {
     display: inline-flex; align-items: center; gap: 0.35rem;
-    font-size: 0.7rem; font-weight: 600;
+    font-size: 0.7rem; font-weight: 700;
     padding: 0.22rem 0.65rem; border-radius: 999px;
     white-space: nowrap; margin-bottom: 0.5rem;
 }
-/* === Chip profilo header === */
-.profilo-chip {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    background: #eef2ff; color: #2151ff;
-    font-size: 0.72rem; font-weight: 600;
-    padding: 0.22rem 0.65rem; border-radius: 999px;
-    white-space: nowrap;
+/* === Nota profilo header (testo semplice, niente blocco) === */
+.profilo-nota {
+    margin-left: 0.6rem;
+    font-size: 0.78rem; font-weight: 600; font-style: italic;
+    color: #a99c8f;
 }
-/* === Riquadro messaggio assistente (container con bordo) === */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    background: #f7f8fa;
-    border: 1px solid #eef0f3 !important;
-    border-radius: 16px;
+/* === Riquadro messaggio assistente: SOLO le card delle risposte === */
+[class*="st-key-msgcard_"] {
+    background: #ffffff;
+    border: 1px solid #ECE5D6 !important;
+    border-radius: 18px;
     max-width: 760px;
     margin: 1rem auto;
+    box-shadow: 0 8px 22px -16px rgba(46,39,35,.3);
 }
 .msg-card { display: flex; gap: 0.7rem; align-items: flex-start; }
 .msg-card .msg-assistant-bubble {
@@ -326,16 +349,16 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 /* Bottoni Copia/Rigenera dentro il riquadro */
 .st-key-copia_btn button, .st-key-rigen_btn button {
     background: transparent !important;
-    color: #6b7280 !important;
-    border: 1px solid #e0e2e8 !important;
-    border-radius: 8px !important;
+    color: #9a8c7f !important;
+    border: 1px solid #E7E1D5 !important;
+    border-radius: 10px !important;
     font-size: 0.76rem !important;
     padding: 0.15rem 0.5rem !important;
     min-height: 0 !important;
 }
 .st-key-copia_btn button:hover, .st-key-rigen_btn button:hover {
-    background: #eef2ff !important; color: #2151ff !important;
-    border-color: #c7d2fe !important;
+    background: #EAF1EF !important; color: #4A8C83 !important;
+    border-color: #bfe0cd !important;
 }
 /* === Riga chat in sidebar: menu ... + nome come unico riquadro === */
 [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
@@ -346,13 +369,13 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     [data-testid="stPopover"] button {
     border: none !important;
     background: transparent !important;
-    color: #6b7280 !important;
+    color: #9a8c7f !important;
     padding: 0.4rem 0.2rem !important;
     min-height: 0 !important;
 }
 [data-testid="stSidebar"] [data-testid="stHorizontalBlock"]
     [data-testid="stPopover"] button:hover {
-    color: #2151ff !important;
+    color: #4A8C83 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -430,8 +453,6 @@ def init_session():
         st.session_state.assistente = AssistenteRAG(retriever=init_retriever())
     if "mostra_fonti" not in st.session_state:
         st.session_state.mostra_fonti = False
-    if "search_chats" not in st.session_state:
-        st.session_state.search_chats = ""
     if "copia_attiva" not in st.session_state:
         st.session_state.copia_attiva = False
     if "vista" not in st.session_state:
@@ -482,52 +503,14 @@ def rinomina_chat(chat_id: str, nuovo_titolo: str) -> None:
             break
     _salva_chats()
 
-def _applica_profilo_selectbox():
-    """
-    Callback della selectbox profilo. Scatta SOLO quando l'utente cambia
-    manualmente il profilo (non a ogni rerun): aggiorna la fonte di verita
-    (assistente.profilo_corrente) e la propaga alla chat corrente.
-    """
-    chiavi = [None] + list(PROFILI.keys())
-    nuovo  = chiavi[st.session_state.sel_profilo]
-    st.session_state.assistente.profilo_corrente = nuovo
-    ch = chat_attuale()
-    if ch is not None:
-        ch["profilo"] = nuovo
-        _salva_chats()
-
-def raggruppa_chats(chats: list) -> dict:
-    """
-    Raggruppa le chat per fascia temporale in base all'ULTIMA ATTIVITA
-    (non alla data di creazione), ordinate dalla piu' recente.
-    """
-    oggi   = datetime.now().date()
-    gruppi = {
-        "Oggi": [], "Ieri": [],
-        "Ultimi 7 giorni": [], "Ultimi 30 giorni": [], "Piu' vecchie": [],
-    }
-    for c in sorted(chats, key=_data_attivita, reverse=True):
-        delta = (oggi - _data_attivita(c).date()).days
-        if delta <= 0:
-            gruppi["Oggi"].append(c)
-        elif delta == 1:
-            gruppi["Ieri"].append(c)
-        elif delta <= 7:
-            gruppi["Ultimi 7 giorni"].append(c)
-        elif delta <= 30:
-            gruppi["Ultimi 30 giorni"].append(c)
-        else:
-            gruppi["Piu' vecchie"].append(c)
-    return gruppi
-
 def render_sidebar():
     with st.sidebar:
         st.markdown("""
         <div class="brand-row">
-            <div class="brand-logo">R</div>
+            <div class="brand-logo">CB</div>
             <div>
-                <div class="brand-title">RAG-Obesita</div>
-                <div class="brand-sub">v0.3 &middot; tesi</div>
+                <div class="brand-title">Crescere Bene</div>
+                <div class="brand-sub">Assistente RAG &middot; 0&ndash;10 anni</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -543,77 +526,22 @@ def render_sidebar():
         ):
             st.session_state.vista = "chat" if is_dash else "dashboard"
             st.rerun()
-        st.text_input(
-            "cerca",
-            placeholder="cerca chat...",
-            label_visibility="collapsed",
-            key="search_chats",
+        recenti = sorted(
+            st.session_state.chats, key=_data_attivita, reverse=True
         )
-        query   = (st.session_state.search_chats or "").strip().lower()
-        gruppi  = raggruppa_chats(st.session_state.chats)
-        for nome_gruppo, lista in gruppi.items():
-            visibili = [c for c in lista if not query or query in c["titolo"].lower()]
-            if not visibili:
-                continue
-            st.markdown(f'<div class="sb-label">{nome_gruppo}</div>', unsafe_allow_html=True)
-            for c in visibili:
+        if recenti:
+            st.markdown('<div class="sb-label">Recenti</div>', unsafe_allow_html=True)
+            for c in recenti:
                 titolo    = c["titolo"]
-                etichetta = titolo if len(titolo) <= 30 else titolo[:27] + "..."
-                col_menu, col_nome = st.columns([0.16, 0.84], gap="small")
-                with col_menu:
-                    with st.popover(":material/menu:", use_container_width=True):
-                        nuovo = st.text_input(
-                            "Rinomina conversazione",
-                            value=c["titolo"],
-                            key=f"rename_{c['id']}",
-                        )
-                        b1, b2 = st.columns(2)
-                        with b1:
-                            if st.button("Salva", key=f"save_{c['id']}"):
-                                rinomina_chat(c["id"], nuovo)
-                                st.rerun()
-                        with b2:
-                            if st.button("Elimina", key=f"del_{c['id']}"):
-                                elimina_chat(c["id"])
-                                st.rerun()
-                with col_nome:
-                    if st.button(
-                        f"💬 {etichetta}",
-                        key=f"chat_{c['id']}",
-                        use_container_width=True,
-                    ):
-                        st.session_state.chat_corrente = c["id"]
-                        _ricarica_cronologia_assistente(c)
-                        st.rerun()
-        st.markdown("<div style='flex:1; min-height:2rem;'></div>", unsafe_allow_html=True)
-        st.markdown('<div class="sb-label">Profilo</div>', unsafe_allow_html=True)
-        profilo_corr = st.session_state.assistente.profilo_corrente
-        opzioni      = ["— rilevamento automatico —"] + [PROFILI[k]["etichetta"] for k in PROFILI]
-        chiavi       = [None] + list(PROFILI.keys())
-        desired_idx  = chiavi.index(profilo_corr) if profilo_corr in chiavi else 0
-        st.session_state.sel_profilo = desired_idx
-        st.selectbox(
-            "profilo",
-            options=range(len(opzioni)),
-            format_func=lambda i: opzioni[i],
-            label_visibility="collapsed",
-            key="sel_profilo",
-            on_change=_applica_profilo_selectbox,
-        )
-        nome_profilo = (
-            PROFILI[profilo_corr]["etichetta"]
-            if profilo_corr else "—"
-        )
-        iniziale = nome_profilo[0].upper() if nome_profilo != "—" else "?"
-        st.markdown(f"""
-        <div class="user-card">
-            <div class="user-avatar">{iniziale}</div>
-            <div>
-                <div class="user-name">Utente</div>
-                <div class="user-role">{nome_profilo}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+                etichetta = titolo if len(titolo) <= 34 else titolo[:31] + "..."
+                if st.button(
+                    etichetta,
+                    key=f"chat_{c['id']}",
+                    use_container_width=True,
+                ):
+                    st.session_state.chat_corrente = c["id"]
+                    _ricarica_cronologia_assistente(c)
+                    st.rerun()
 
 def _ricarica_cronologia_assistente(chat: dict) -> None:
     """Quando l'utente cambia chat, ripopola la memoria conversazionale del LLM."""
@@ -630,25 +558,43 @@ def _ricarica_cronologia_assistente(chat: dict) -> None:
         assist.cronologia = assist.cronologia[-10:]
 
 def render_header(titolo: str, profilo: str | None = None):
-    col1, col2 = st.columns([6, 1])
+    col1, col2, col3 = st.columns([6, 1, 1])
     with col1:
-        chip = ""
+        nota = ""
         if profilo and profilo in PROFILI:
-            chip = (
-                f'<span class="profilo-chip">&#9679; '
+            nota = (
+                f'<span class="profilo-nota">profilo rilevato: '
                 f'{html.escape(PROFILI[profilo]["etichetta"])}</span>'
             )
         st.markdown(
             f'<div class="conv-header" style="border:none;padding:0;margin:0;">'
-            f'<span class="conv-title">{html.escape(titolo)}</span>{chip}</div>',
+            f'<span class="conv-title">{html.escape(titolo)}</span>{nota}</div>',
             unsafe_allow_html=True,
         )
     with col2:
+        ch = chat_attuale()
+        with st.popover("⋯", use_container_width=True):
+            if ch is not None:
+                nuovo = st.text_input(
+                    "Rinomina conversazione",
+                    value=ch["titolo"],
+                    key=f"rename_hdr_{ch['id']}",
+                )
+                b1, b2 = st.columns(2)
+                with b1:
+                    if st.button("Salva", key=f"save_hdr_{ch['id']}"):
+                        rinomina_chat(ch["id"], nuovo)
+                        st.rerun()
+                with b2:
+                    if st.button("Elimina", key=f"del_hdr_{ch['id']}"):
+                        elimina_chat(ch["id"])
+                        st.rerun()
+    with col3:
         label = "Fonti ▾" if not st.session_state.mostra_fonti else "Fonti ▴"
         if st.button(label, key="btn_fonti"):
             st.session_state.mostra_fonti = not st.session_state.mostra_fonti
             st.rerun()
-    st.markdown('<hr style="border:none;border-top:1px solid #eef0f3;margin:0.4rem 0 1.2rem 0;" />',
+    st.markdown('<hr style="border:none;border-top:1px solid #ECE5D6;margin:0.4rem 0 1.2rem 0;" />',
                 unsafe_allow_html=True)
 
 def _carica_guardrail_log() -> list:
@@ -756,7 +702,7 @@ def render_messaggio(msg: dict, idx: int, is_last: bool = False):
     corpo = _markdown_html(msg["testo"])
     triggers = msg.get("guardrail") or []
     classe = _classifica_guardrail(triggers)
-    with st.container(border=True):
+    with st.container(border=True, key=f"msgcard_{idx}"):
         if classe is not None:
             etichetta, colore = classe
             st.markdown(
@@ -768,7 +714,7 @@ def render_messaggio(msg: dict, idx: int, is_last: bool = False):
             )
         st.markdown(
             f'<div class="msg-card">'
-            f'<div class="msg-avatar-ai">AI</div>'
+            f'<div class="msg-avatar-ai">CB</div>'
             f'<div class="msg-assistant-bubble">{corpo}</div>'
             f'</div>',
             unsafe_allow_html=True,
@@ -799,7 +745,7 @@ def render_pannello_fonti(chat: dict):
     if not fonti:
         st.info("Nessuna fonte disponibile per questa conversazione.")
         return
-    st.markdown('<div class="sb-label" style="padding-left:0;">Chunks recuperati</div>',
+    st.markdown('<div class="sb-label" style="padding-left:0;">Fonti consultate</div>',
                 unsafe_allow_html=True)
     for i, f in enumerate(fonti, 1):
         titolo  = f.get("titolo", "Documento sconosciuto")
@@ -815,63 +761,16 @@ def render_pannello_fonti(chat: dict):
 
 def esegui_pipeline(domanda: str) -> dict:
     """
-    Esegue rilevamento profilo (al primo messaggio) + pipeline RAG completa,
-    racchiusa fra i guardrail di input e di output.
-    Restituisce {risposta, fonti, query_riscritta, profilo, guardrail}.
+    Esegue la pipeline RAG completa tramite AssistenteRAG.genera() (metodo
+    unico condiviso con la CLI) e adatta il risultato al formato atteso
+    dalla UI: {risposta, fonti, query_riscritta, profilo, guardrail}.
     """
-    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-    from langchain_core.messages import HumanMessage, AIMessage
-    from chatbot import get_llm, POLICY_RAG
-    from crea_vector_db import rerank_chunks, RETRIEVER_K
-    from guardrails import filtra_input, filtra_output, verifica_grounding
-
-    # --- INPUT GUARDRAIL ---
-    dec_in = filtra_input(domanda)
-    if not dec_in.consenti:
-        return {
-            "risposta":        dec_in.messaggio_utente,
-            "fonti":           [],
-            "query_riscritta": "",
-            "profilo":         None,
-            "guardrail":       list(dec_in.triggered),
-        }
-    domanda_pulita = dec_in.domanda_sanificata
-
     assistente = st.session_state.assistente
-    with st.status("Elaborazione in corso...", expanded=False) as status:
-        status.update(label="Identificazione del profilo...")
-        system_prompt, temperatura, prof_eff = assistente._prepara_generazione(domanda_pulita)
-        status.update(label="Analisi della domanda...")
-        query_riscritta = assistente._riscrivi_query(domanda_pulita)
-        status.update(label="Ricerca nei documenti...")
-        candidati = assistente.retriever.invoke(query_riscritta)
-        status.update(label="Selezione dei passaggi piu' pertinenti...")
-        llm_rerank = get_llm(temperature=0.0, max_tokens=16)
-        docs = rerank_chunks(candidati, query_riscritta, llm_rerank, k=RETRIEVER_K)
-        status.update(label="Elaborazione della risposta...")
-        contesto      = assistente._formatta_contesto(docs)
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("system", POLICY_RAG),
-            MessagesPlaceholder(variable_name="cronologia"),
-            ("human", "{domanda}"),
-        ])
-        llm   = get_llm(temperature=temperatura)
-        chain = prompt | llm | assistente.parser
-        risposta = chain.invoke({
-            "context":    contesto,
-            "cronologia": assistente.cronologia,
-            "domanda":    domanda_pulita,
-        })
-        # --- RUNTIME GROUNDING + OUTPUT GUARDRAIL ---
-        status.update(label="Verifica grounding...")
-        score_grounding = verifica_grounding(risposta, docs)
-        dec_out = filtra_output(risposta, docs, score_grounding=score_grounding)
-        risposta = dec_out.risposta
-        assistente.cronologia.append(HumanMessage(content=domanda_pulita))
-        assistente.cronologia.append(AIMessage(content=risposta))
-        if len(assistente.cronologia) > 10:
-            assistente.cronologia = assistente.cronologia[-10:]
+    with st.status("Sto consultando le fonti…", expanded=False) as status:
+        ris = assistente.genera(
+            domanda,
+            on_step=lambda label: status.update(label=label),
+        )
         status.update(label="Risposta pronta", state="complete")
     fonti = [
         {
@@ -879,14 +778,14 @@ def esegui_pipeline(domanda: str) -> dict:
             "pagina":  d.metadata.get("page", ""),
             "snippet": d.page_content[:280] + ("..." if len(d.page_content) > 280 else ""),
         }
-        for d in docs
+        for d in ris["docs"]
     ]
     return {
-        "risposta":        risposta,
+        "risposta":        ris["risposta"],
         "fonti":           fonti,
-        "query_riscritta": query_riscritta,
-        "profilo":         prof_eff,
-        "guardrail":       list(dec_in.triggered) + list(dec_out.triggered),
+        "query_riscritta": ris["query_riscritta"],
+        "profilo":         ris["profilo"],
+        "guardrail":       ris["guardrail"],
     }
 
 def rigenera_ultima_risposta() -> None:
@@ -936,10 +835,10 @@ def main():
     if chat is None:
         st.markdown("""
         <div class="welcome-wrap">
-            <div class="welcome-title">Come posso aiutarti oggi?</div>
+            <div class="welcome-title">Ciao, come posso aiutarti?</div>
             <div class="welcome-sub">
-                Assistente conversazionale per il counseling sull'obesita infantile.<br>
-                Risposte basate su linee guida e letteratura scientifica.
+                Assistente per la <strong>prevenzione dell'obesit&agrave; infantile</strong> (0&ndash;10 anni).<br>
+                Risposte basate su linee guida e documenti scientifici, adattate al tuo profilo.
             </div>
             <div class="welcome-disclaimer">
                 Strumento di supporto &middot; non sostituisce il parere medico

@@ -21,6 +21,9 @@ from collections import defaultdict
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# La valutazione red-team chiama filtra_input ~100 volte: disabilitiamo il
+# logging di audit per non inquinare la dashboard con trigger di test.
+os.environ.setdefault("GUARDRAIL_LOG", "0")
 from guardrails import filtra_input
 
 PERCORSO_DATASET = os.path.join(

@@ -43,7 +43,6 @@ def get_llm(temperature: float = TEMPERATURE, max_tokens: int = MAX_TOKENS) -> C
 PROFILI = {
     "genitore": {
         "etichetta": "Genitore",
-        "emoji": "Genitore",
         "descrizione": "Genitore o tutore di un bambino",
         "temperature": 0.3,
         "prompt": (
@@ -63,7 +62,6 @@ PROFILI = {
     },
     "insegnante": {
         "etichetta": "Insegnante",
-        "emoji": "Insegnante",
         "descrizione": "Insegnante o educatore scolastico",
         "temperature": 0.3,
         "prompt": (
@@ -83,7 +81,6 @@ PROFILI = {
     },
     "pediatra": {
         "etichetta": "Pediatra",
-        "emoji": "Pediatra",
         "descrizione": "Medico pediatra o medico di base",
         "temperature": 0.0,
         "prompt": (
@@ -103,7 +100,6 @@ PROFILI = {
     },
     "nutrizionista": {
         "etichetta": "Nutrizionista",
-        "emoji": "Nutrizionista",
         "descrizione": "Nutrizionista o dietista",
         "temperature": 0.1,
         "prompt": (
@@ -123,7 +119,6 @@ PROFILI = {
     },
     "ricercatore": {
         "etichetta": "Ricercatore",
-        "emoji": "Ricercatore",
         "descrizione": "Ricercatore, studente universitario o accademico",
         "temperature": 0.0,
         "prompt": (
@@ -344,13 +339,27 @@ class AssistenteRAG:
             for i, doc in enumerate(docs, 1):
                 print(f"  [{i}] {doc.metadata.get('titolo_documento', '?')} "
                       f"- {doc.page_content[:120]}...")
-    def rispondi(self, domanda: str) -> str:
+    def genera(self, domanda: str, on_step=None) -> dict:
         """
-        Esegue la pipeline completa e restituisce la risposta testuale.
-        Registra l'interazione nel log di sessione.
+        Pipeline RAG completa con guardrail. Metodo UNICO condiviso da CLI
+        (rispondi) e interfaccia web (app.esegui_pipeline): elimina la
+        duplicazione della logica e garantisce che entrambe applichino gli
+        stessi controlli e lo stesso logging.
+
+        Args:
+            domanda : messaggio dell'utente.
+            on_step : callback opzionale on_step(label) per aggiornare la UI
+                      durante le fasi (usato dall'interfaccia web).
+        Returns:
+            dict con: risposta, docs, query_riscritta, profilo, guardrail
+            (lista trigger), bloccato (bool), score_grounding.
         """
+        def step(msg: str) -> None:
+            if on_step is not None:
+                on_step(msg)
+
         t_start = time.time()
-        # Guardrail di input: blocco/redazione prima della pipeline.
+        # --- Guardrail di input ---
         dec_in = filtra_input(domanda)
         if not dec_in.consenti:
             self.logger.log_interazione(
@@ -361,31 +370,36 @@ class AssistenteRAG:
                 risposta=dec_in.messaggio_utente,
                 latenza_ms=int((time.time() - t_start) * 1000),
             )
-            print(f"\n[Guardrail input attivato: {', '.join(dec_in.triggered)}]")
-            return dec_in.messaggio_utente
+            return {
+                "risposta":        dec_in.messaggio_utente,
+                "docs":            [],
+                "query_riscritta": "",
+                "profilo":         None,
+                "guardrail":       list(dec_in.triggered),
+                "bloccato":        True,
+                "score_grounding": None,
+            }
         domanda_pulita = dec_in.domanda_sanificata
-        gia_fissato = self.profilo_corrente is not None
+
+        step("Identificazione del profilo…")
         system_prompt, temperatura, prof_eff = self._prepara_generazione(domanda_pulita)
-        if not gia_fissato:
-            if prof_eff in PROFILI:
-                print(f"\nProfilo rilevato: {PROFILI[prof_eff]['etichetta']}")
-                print("(Digita 'profilo' per cambiarlo manualmente)\n")
-            else:
-                print("\nProfilo non determinato (messaggio generico): "
-                      "registro neutro.\n")
+        step("Analisi della domanda…")
         query_riscritta = self._riscrivi_query(domanda_pulita)
+        step("Sto consultando le fonti…")
         candidati = self.retriever.invoke(query_riscritta)
         if os.getenv("RAG_RERANK", "1") == "1":
-            llm_rerank = get_llm(temperature=0.0, max_tokens=16)
+            step("Selezione dei passaggi piu' pertinenti…")
+            llm_rerank = get_llm(temperature=0.0, max_tokens=128)
             docs = rerank_chunks(candidati, query_riscritta, llm_rerank, k=RETRIEVER_K)
         else:
-            # Comportamento pre-fix (per ablation/confronto): nessun rerank,
-            # i candidati grezzi del retriever vanno dritti nel contesto.
+            # Ablation/confronto: nessun rerank, candidati grezzi nel contesto.
             docs = candidati
         self.ultimi_docs = docs
         self.ultima_query_riscritta = query_riscritta
         contesto = self._formatta_contesto(docs)
-        llm_profilo    = get_llm(temperature=temperatura, max_tokens=MAX_TOKENS)
+
+        step("Elaborazione della risposta…")
+        llm_profilo = get_llm(temperature=temperatura, max_tokens=MAX_TOKENS)
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
             ("system", POLICY_RAG),
@@ -398,28 +412,61 @@ class AssistenteRAG:
             "cronologia": self.cronologia,
             "domanda":    domanda_pulita,
         })
-        # Runtime grounding check (LLM-judge) + filtra_output
+
+        # --- Grounding check + guardrail di output ---
+        step("Verifica del grounding…")
         score_grounding = verifica_grounding(risposta, docs)
         dec_out = filtra_output(risposta, docs, score_grounding=score_grounding)
         risposta = dec_out.risposta
-        if dec_out.triggered:
-            print(f"\n[Guardrail output attivato: {', '.join(dec_out.triggered)} "
-                  f"| grounding={score_grounding:.2f}]")
+
         self.cronologia.append(HumanMessage(content=domanda_pulita))
         self.cronologia.append(AIMessage(content=risposta))
         if len(self.cronologia) > 10:
             self.cronologia = self.cronologia[-10:]
-        latenza_ms = int((time.time() - t_start) * 1000)
         self.logger.log_interazione(
             profilo=self.profilo_corrente,
             query_originale=domanda,
             query_riscritta=query_riscritta,
             chunks=docs,
             risposta=risposta,
-            latenza_ms=latenza_ms,
+            latenza_ms=int((time.time() - t_start) * 1000),
         )
-        self._stampa_fonti(docs, query_riscritta)
-        return risposta
+        return {
+            "risposta":        risposta,
+            "docs":            docs,
+            "query_riscritta": query_riscritta,
+            "profilo":         prof_eff,
+            "guardrail":       list(dec_in.triggered) + list(dec_out.triggered),
+            "bloccato":        False,
+            "score_grounding": score_grounding,
+        }
+
+    def rispondi(self, domanda: str) -> str:
+        """
+        Wrapper testuale per la CLI: esegue genera() e stampa a schermo
+        profilo rilevato, eventuali guardrail e fonti.
+        """
+        gia_fissato = self.profilo_corrente is not None
+        ris = self.genera(domanda)
+        if ris["bloccato"]:
+            print(f"\n[Guardrail input attivato: {', '.join(ris['guardrail'])}]")
+            return ris["risposta"]
+        if not gia_fissato:
+            prof = ris["profilo"]
+            if prof in PROFILI:
+                print(f"\nProfilo rilevato: {PROFILI[prof]['etichetta']}")
+                print("(Digita 'profilo' per cambiarlo manualmente)\n")
+            else:
+                print("\nProfilo non determinato (messaggio generico): "
+                      "registro neutro.\n")
+        gr_out = [g for g in ris["guardrail"]
+                  if g.startswith(("output_", "missing_", "grounding_"))]
+        if gr_out:
+            sg = ris["score_grounding"]
+            print(f"\n[Guardrail output attivato: {', '.join(gr_out)}"
+                  + (f" | grounding={sg:.2f}]" if sg is not None else "]"))
+        self._stampa_fonti(ris["docs"], ris["query_riscritta"])
+        return ris["risposta"]
     def reset_memoria(self) -> None:
         self.cronologia = []
         print("Memoria conversazionale azzerata.")

@@ -7,6 +7,67 @@ import guardrails as gr
 
 
 # ============================================================
+#  CRISI / EMERGENZA (priorita' massima)
+# ============================================================
+
+def test_input_crisi_autolesionismo_blocca_e_offre_numeri():
+    dec = gr.filtra_input("Non voglio piu' vivere, voglio farla finita")
+    assert dec.consenti is False
+    assert "crisi:autolesionismo_suicidio" in dec.triggered
+    # offre un numero di emergenza concreto
+    assert "112" in dec.messaggio_utente
+    assert "02 2327 2327" in dec.messaggio_utente
+
+
+def test_input_crisi_disturbo_alimentare_blocca_e_offre_numeri():
+    dec = gr.filtra_input("Mia figlia si fa vomitare dopo i pasti per non ingrassare")
+    assert dec.consenti is False
+    assert "crisi:disturbo_alimentare" in dec.triggered
+    assert "800 180 969" in dec.messaggio_utente
+
+
+def test_input_crisi_abuso_blocca_e_offre_numeri():
+    dec = gr.filtra_input("Il papa' lo picchia tutti i giorni, cosa faccio?")
+    assert dec.consenti is False
+    assert "crisi:abuso_maltrattamento" in dec.triggered
+    assert "114" in dec.messaggio_utente
+
+
+def test_input_crisi_ha_priorita_su_off_topic():
+    """Un messaggio di crisi senza keyword di dominio non deve finire
+    nel ramo 'off_topic' ma in quello della crisi."""
+    dec = gr.filtra_input("voglio morire")
+    assert dec.consenti is False
+    assert any(t.startswith("crisi:") for t in dec.triggered)
+    assert "off_topic" not in dec.triggered
+
+
+def test_input_crisi_non_logga_testo_grezzo(monkeypatch):
+    """Il payload sensibile non deve mai raggiungere l'audit log."""
+    catturati = []
+    monkeypatch.setattr(
+        gr, "_log_trigger",
+        lambda tipo, decisione, payload_extra: catturati.append((decisione, payload_extra)),
+    )
+    testo = "mi voglio uccidere, segreto XYZ123"
+    gr.filtra_input(testo)
+    assert catturati, "il trigger di crisi deve comunque loggare l'evento"
+    decisione, payload = catturati[0]
+    assert payload == "[REDACTED_CRISIS]"
+    assert "XYZ123" not in payload
+    assert "XYZ123" not in decisione.domanda_sanificata
+
+
+def test_input_domanda_clinica_legittima_non_e_crisi():
+    """Una domanda informativa sui DCA nel corpus non deve scattare la crisi."""
+    dec = gr.filtra_input(
+        "Quali sono i segnali precoci dei disturbi alimentari di cui parlano le linee guida?"
+    )
+    assert not any(t.startswith("crisi:") for t in dec.triggered)
+    assert dec.consenti is True
+
+
+# ============================================================
 #  INPUT guardrails
 # ============================================================
 

@@ -229,46 +229,63 @@ class RetrieverIbrido:
         return [entry["doc"] for entry in filtrati[: self.k]]
 PROMPT_RERANKING = """Sei un sistema di information retrieval per documenti scientifici
 italiani su nutrizione pediatrica e obesita' infantile.
-Valuta la pertinenza del seguente chunk rispetto alla query dell'utente.
-Rispondi SOLO con un numero intero da 0 a 10 (0 = irrilevante, 10 = perfettamente pertinente).
-Nessuna spiegazione, solo il numero.
+Valuta la pertinenza di ciascun passaggio rispetto alla query dell'utente e
+assegna a ognuno un punteggio intero da 0 a 10 (0 = irrilevante, 10 = perfettamente
+pertinente).
+
 Query: {query}
-Chunk:
-{chunk}
-Pertinenza (0-10):"""
+
+Passaggi:
+{passaggi}
+
+Rispondi SOLO con una riga per passaggio nel formato "numero:punteggio",
+separati da spazio o a capo, senza altro testo.
+Esempio: 1:8 2:3 3:9 ...
+Punteggi:"""
 
 def rerank_chunks(chunks: list, query: str, llm, k: int = RETRIEVER_K) -> list:
     """
     Riordina i chunk per pertinenza usando il LLM come cross-encoder leggero.
-    Recupera RERANKER_K candidati, assegna un punteggio 0-10 a ciascuno,
-    e restituisce i migliori k dopo il filtraggio per soglia.
+    A differenza della versione a chiamata-per-chunk, valuta TUTTI i candidati
+    in UNA SOLA chiamata (prompt batch): 1 richiesta LLM invece di len(chunks),
+    riducendo drasticamente costo e latenza. Restituisce i migliori k dopo il
+    filtro per soglia.
+
+    Fail-safe: se la chiamata fallisce o il parsing non produce punteggi,
+    restituisce i primi k candidati nell'ordine originale del retriever.
+
     Args:
         chunks   : lista di Document candidati dal retriever ibrido.
         query    : query originale o riscritta.
-        llm      : istanza LLM (ChatOpenAI/OpenRouter) per il reranking.
+        llm      : istanza LLM per il reranking.
         k        : numero di chunk finali da restituire.
     Returns:
         Lista ordinata dei migliori chunk dopo reranking e filtro soglia.
     """
-    from langchain_core.prompts import ChatPromptTemplate
+    if not chunks:
+        return []
     from langchain_core.output_parsers import StrOutputParser
-    parser = StrOutputParser()
-    punteggi = []
-    for chunk in chunks:
-        prompt = ChatPromptTemplate.from_messages([
-            ("human", PROMPT_RERANKING.format(
-                query=query,
-                chunk=chunk.page_content[:500],
-            ))
-        ])
-        try:
-            chain     = prompt | llm | parser
-            risultato = chain.invoke({}).strip()
-            numeri = [int(x) for x in risultato.split() if x.isdigit()]
-            punteggio = numeri[0] if numeri else 0
-        except Exception:
-            punteggio = 0
-        punteggi.append(punteggio)
+
+    blocco = "\n".join(
+        f"[{i}] {c.page_content[:500]}" for i, c in enumerate(chunks, 1)
+    )
+    prompt_testo = PROMPT_RERANKING.format(query=query, passaggi=blocco)
+    punteggi = [0] * len(chunks)
+    try:
+        out = (llm | StrOutputParser()).invoke(prompt_testo)
+        # estrae tutte le coppie "indice:punteggio"
+        for m in re.finditer(r"(\d+)\s*[:\).]\s*(\d{1,2})", out):
+            idx = int(m.group(1)) - 1
+            val = int(m.group(2))
+            if 0 <= idx < len(chunks):
+                punteggi[idx] = min(val, 10)
+    except Exception:
+        # fail-safe: mantiene l'ordine del retriever
+        return chunks[:k]
+
+    if not any(punteggi):
+        return chunks[:k]
+
     chunk_con_score = sorted(
         zip(chunks, punteggi),
         key=lambda x: x[1],
